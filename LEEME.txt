@@ -1,16 +1,49 @@
 COLOQUIO MODELO DE JAVASCRIPT - IPEM 146
 
-Archivos:
+ARCHIVOS
 - index.html
 - styles.css
 - app.js
 
+INSTALACION
 Subir los tres archivos a la misma carpeta del sitio (por ejemplo, GitHub Pages).
+No cambiar los nombres de los archivos ni separarlos en carpetas diferentes.
 
-Puntaje:
-- Teoría: 20 x 0,10 = 2 puntos.
-- Interpretación: 20 x 0,20 = 4 puntos.
-- Código: 5 x 0,80 = 4 puntos.
+PUNTAJE
+- Parte A - Teoría: 20 preguntas x 0,10 = 2 puntos.
+- Parte B - Interpretación: 20 preguntas x 0,20 = 4 puntos.
+- Parte C - Código: 5 ejercicios x 0,80 = 4 puntos.
 - Total: 10 puntos. Aprobación: 7/10 (70%).
 
-La contraseña de acceso docente y eliminación de intento se valida en JavaScript del navegador. El campo la muestra enmascarada, pero no constituye seguridad real: para protegerla de estudiantes con conocimientos técnicos debe validarse en un servidor o mediante autenticación y reglas seguras.
+MEJORAS INCLUIDAS
+- Identificación con nombre, apellido y curso.
+- 20 preguntas teóricas y 20 de interpretación con opciones y orden aleatorios.
+- El orden aleatorio se conserva al recargar la página durante un intento.
+- Barra de progreso de las 45 actividades.
+- Aviso de preguntas y ejercicios sin responder antes de entregar.
+- Confirmación de entrega.
+- Guardado automático y recuperación del borrador en el mismo navegador.
+- Corrección detallada de las partes A y B con respuestas elegidas, respuestas correctas y explicaciones.
+- Respuestas correctas e incorrectas diferenciadas por color.
+- Corrección manual docente de los cinco ejercicios de código, de 0 a 0,80 puntos cada uno.
+- Panel docente con historial, filtro por curso, búsqueda por estudiante, promedio real, porcentaje de aprobación y estadísticas de preguntas con más errores.
+- Revisión y modificación de calificaciones de intentos anteriores desde el panel.
+- Informe individual imprimible o guardable como PDF.
+- Exportación de resultados a CSV compatible con Excel.
+- Informe general imprimible o guardable como PDF.
+- Escala de desempeño: 0 a 3,99 bajo; 4 a 5,99 en proceso; 6 a 6,99 próximo a aprobar; 7 a 8,99 aprobado; 9 a 10 destacado.
+- La eliminación del intento activo conserva el historial docente y habilita una nueva evaluación en ese navegador.
+
+ACCESO DOCENTE
+Contraseña: fRANCISCOP6$
+El campo de contraseña oculta los caracteres escritos.
+
+LIMITACIONES IMPORTANTES
+1. El sistema utiliza localStorage. Los intentos y el historial se guardan solamente en el navegador y dispositivo donde se realizan. No se sincronizan automáticamente entre computadoras o celulares.
+2. Para reunir resultados de varios dispositivos, tener un registro escolar centralizado y evitar que un estudiante borre o altere datos, se necesita una base de datos y autenticación del lado del servidor (por ejemplo, Firebase Authentication + Firestore con reglas seguras).
+3. La contraseña incluida en JavaScript es una barrera de interfaz, no una protección real: puede descubrirse inspeccionando el código fuente. No usarla como mecanismo de seguridad de datos sensibles.
+4. La parte C se corrige manualmente por el docente. Los modelos de solución son orientativos y se pueden aceptar otras soluciones correctas.
+5. La exportación para Excel genera un archivo CSV que Excel puede abrir. Para PDF se abre la ventana de impresión del navegador y se elige "Guardar como PDF".
+
+RECOMENDACION DE USO
+Probar primero en un navegador con un intento de prueba. Revisar el panel docente, calificar los cinco ejercicios, exportar CSV y generar un PDF antes de utilizarlo con estudiantes.

@@ -20,6 +20,8 @@
   // Cambiar la versión de la clave cuando el docente publique un examen nuevo.
   const EXAM_KEY = "ipem146_js_examen_intento_unico_v3";
   const DRAFT_KEY = `${EXAM_KEY}_borrador`;
+  const HISTORY_KEY = "ipem146_js_examen_historial_v1";
+  const LAYOUT_KEY = `${EXAM_KEY}_orden`;
   const PASS_PERCENT = 70;
   const TEACHER_PASSWORD = "fRANCISCOP6$";
 
@@ -368,9 +370,83 @@
   let codeAnswers = {};
   let examLocked = false;
   let isGrading = false;
+  let examLayout = null;
 
   const $ = id => document.getElementById(id);
   const totalQuestions = theory.length + interpretation.length;
+
+  function shuffled(values) {
+    const result = [...values];
+    for (let i = result.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [result[i], result[j]] = [result[j], result[i]];
+    }
+    return result;
+  }
+
+  function makeExamLayout() {
+    const options = {};
+    [...theory.map((_, i) => `t-${i}`), ...interpretation.map((_, i) => `i-${i}`)].forEach(id => {
+      const item = id.startsWith('t-') ? theory[Number(id.slice(2))] : interpretation[Number(id.slice(2))];
+      options[id] = shuffled(item.a.map((_, i) => i));
+    });
+    return {
+      theory: shuffled(theory.map((_, i) => i)),
+      interpretation: shuffled(interpretation.map((_, i) => i)),
+      options
+    };
+  }
+
+  function loadExamLayout() {
+    try {
+      const attempt = JSON.parse(localStorage.getItem(EXAM_KEY) || 'null');
+      const draft = JSON.parse(localStorage.getItem(DRAFT_KEY) || 'null');
+      examLayout = attempt?.layout || draft?.layout || JSON.parse(localStorage.getItem(LAYOUT_KEY) || 'null');
+    } catch { examLayout = null; }
+    if (!examLayout || !Array.isArray(examLayout.theory) || !Array.isArray(examLayout.interpretation) || !examLayout.options) {
+      examLayout = makeExamLayout();
+      try { localStorage.setItem(LAYOUT_KEY, JSON.stringify(examLayout)); } catch {}
+    }
+  }
+
+  function getHistory() {
+    try {
+      const data = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+      return Array.isArray(data) ? data : [];
+    } catch { return []; }
+  }
+
+  function saveHistory(attempt) {
+    const history = getHistory();
+    const id = attempt.id || `${attempt.date || Date.now()}_${(attempt.student?.lastName || 'estudiante').toLowerCase()}`;
+    attempt.id = id;
+    const index = history.findIndex(item => item.id === id);
+    if (index >= 0) history[index] = attempt;
+    else history.push(attempt);
+    try { localStorage.setItem(HISTORY_KEY, JSON.stringify(history)); }
+    catch (error) { console.warn('No se pudo guardar el historial docente:', error); }
+  }
+
+  function performanceLabel(score) {
+    if (score >= 9) return 'Destacado';
+    if (score >= 7) return 'Aprobado';
+    if (score >= 6) return 'Próximo a aprobar';
+    if (score >= 4) return 'En proceso';
+    return 'Desempeño bajo';
+  }
+
+  function formatScore(value) {
+    return Number(value || 0).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  function calculateQuestionStats(history) {
+    const items = allItems();
+    return items.map((item, index) => {
+      const answered = history.filter(attempt => Number.isInteger(attempt.answers?.[item.id]));
+      const errors = answered.filter(attempt => attempt.answers[item.id] !== item.c).length;
+      return { label: `${index < 20 ? 'A' : 'B'}${index < 20 ? index + 1 : index - 19}`, errors, total: answered.length, rate: answered.length ? errors / answered.length * 100 : 0 };
+    }).sort((a, b) => b.rate - a.rate);
+  }
 
   function calculateABPoints(savedAnswers) {
     const items = allItems();
@@ -390,29 +466,30 @@
   function renderQuestions(items, target, prefix) {
     const root = $(target);
     if (!root) return;
-
-    root.innerHTML = items.map((item, i) => `
-      <article class="question" id="${prefix}-${i}">
-        <h3><span class="q-number">${i + 1}.</span> ${escapeHTML(item.q.split("\n\n")[0])}</h3>
+    const order = prefix === 't' ? examLayout.theory : examLayout.interpretation;
+    root.innerHTML = order.map(originalIndex => {
+      const item = items[originalIndex];
+      const id = `${prefix}-${originalIndex}`;
+      const optionOrder = examLayout.options[id] || item.a.map((_, i) => i);
+      return `
+      <article class="question" id="${id}">
+        <h3><span class="q-number">${order.indexOf(originalIndex) + 1}.</span> ${escapeHTML(item.q.split("\n\n")[0])}</h3>
         ${item.q.includes("\n\n") ? `<pre class="question-code"><code>${escapeHTML(item.q.split("\n\n").slice(1).join("\n\n"))}</code></pre>` : ""}
         <div class="options">
-          ${item.a.map((option, j) => `
+          ${optionOrder.map(originalOption => `
             <label class="option">
-              <input type="radio" name="${prefix}-${i}" value="${j}">
-              <span>${escapeHTML(option).replace(/\n/g, "<br>")}</span>
+              <input type="radio" name="${id}" value="${originalOption}">
+              <span>${escapeHTML(item.a[originalOption]).replace(/\n/g, "<br>")}</span>
             </label>
           `).join("")}
         </div>
         <p class="feedback" aria-live="polite"></p>
-      </article>
-    `).join("");
+      </article>`;
+    }).join("");
 
     root.querySelectorAll('input[type="radio"]').forEach(input => {
       input.addEventListener("change", () => {
-        if (examLocked) {
-          input.checked = false;
-          return;
-        }
+        if (examLocked) { input.checked = false; return; }
         answers[input.name] = Number(input.value);
         updateProgress();
         saveDraft();
@@ -463,7 +540,7 @@
     codeAnswers = { ...saved };
   }
 
-  function renderStudentSummary(savedAnswers) {
+  function renderStudentSummary(savedAnswers, attempt = {}) {
     const root = $("studentSummary");
     if (!root) return;
     const items = allItems();
@@ -478,7 +555,7 @@
       else if (isAnswered) incorrect++;
       else unanswered++;
       const section = index < 20 ? "Parte A · Teoría" : "Parte B · Interpretación";
-      const number = index < 20 ? index + 1 : index - 19;
+      const number = (index < 20 ? examLayout.theory : examLayout.interpretation).indexOf(index < 20 ? index : index - 20) + 1;
       const statusClass = isCorrect ? "student-correct" : isAnswered ? "student-incorrect" : "student-unanswered";
       const status = isCorrect ? "✓ CORRECTA" : isAnswered ? "✕ INCORRECTA" : "— SIN RESPONDER";
       return `<article class="student-summary-item ${statusClass}">
@@ -497,13 +574,14 @@
         <div class="student-count count-incorrect"><strong>${incorrect}</strong><span>Incorrectas</span></div>
         <div class="student-count count-unanswered"><strong>${unanswered}</strong><span>Sin responder</span></div>
       </div>
-      <p class="student-summary-score">Puntaje: <strong>${abPoints.toFixed(2).replace(".", ",")} / 6 puntos</strong>. Teoría: ${theoryCorrect}/20 (${(theoryCorrect * 0.1).toFixed(2).replace(".", ",")}/2). Interpretación: ${interpretationCorrect}/20 (${(interpretationCorrect * 0.2).toFixed(2).replace(".", ",")}/4). La parte C (código) queda pendiente de evaluación docente.</p>
+      <p class="student-summary-score">Puntaje automático: <strong>${formatScore(abPoints)} / 6 puntos</strong>. Teoría: ${theoryCorrect}/20 (${formatScore(theoryCorrect * 0.1)}/2). Interpretación: ${interpretationCorrect}/20 (${formatScore(interpretationCorrect * 0.2)}/4). ${Number.isFinite(attempt.teacherScore) ? `Código: ${formatScore(Object.values(attempt.teacherCodeScores || {}).reduce((sum, value) => sum + Number(value || 0), 0))}/4. <strong>Nota final: ${formatScore(attempt.teacherScore)}/10 · ${attempt.teacherScore >= 7 ? 'APROBADO' : 'NO APROBADO'}.</strong>` : 'La parte C (código) queda pendiente de evaluación docente.'}</p>
+      <p class="learning-tip"><strong>Para mejorar:</strong> si tuviste errores en teoría, repasá conceptos y definiciones; si tuviste errores en interpretación, practicá la lectura paso a paso de fragmentos de código. La devolución docente completará el diagnóstico de la parte práctica.</p>
       <details class="student-summary-details" open><summary>Ver detalle de las 40 preguntas</summary><div class="student-summary-list">${rows}</div></details>`;
   }
 
   function showCorrection(savedAnswers, savedScore = null, savedDate = null, attempt = {}) {
     // Al entregar, se muestra al estudiante el resumen de A y B con aciertos y errores.
-    renderStudentSummary(savedAnswers);
+    renderStudentSummary(savedAnswers, attempt);
     allItems().forEach(item => {
       const selected = savedAnswers[item.id];
       const card = $(item.id);
@@ -520,7 +598,7 @@
     const identity = [student.name, student.lastName, student.course].filter(Boolean).join(" · ");
     if (Number.isFinite(attempt.teacherScore)) {
       if ($("score")) $("score").innerHTML = `${Number(attempt.teacherScore).toLocaleString("es-AR", { maximumFractionDigits: 2 })}<small> / 10</small>`;
-      if ($("scoreText")) $("scoreText").textContent = `${identity ? identity + " | " : ""}Nota docente: ${Number(attempt.teacherGradeOutOfTen || 0).toFixed(2).replace(".", ",")}/10. Calificación guardada.`;
+      if ($("scoreText")) $("scoreText").textContent = `${identity ? identity + " | " : ""}Nota docente: ${Number(attempt.teacherGradeOutOfTen || 0).toFixed(2).replace(".", ",")}/10 · ${performanceLabel(Number(attempt.teacherGradeOutOfTen || 0))}. Calificación guardada.`;
       if ($("gradeMessage")) {
         const approved = attempt.teacherScore >= 7;
         $("gradeMessage").textContent = approved ? "Evaluación aprobada según el criterio del 70% (7/10)." : "Evaluación no aprobada. El mínimo es 70% (7/10).";
@@ -568,7 +646,7 @@
       const statusClass = isCorrect ? "answer-correct" : isAnswered ? "answer-incorrect" : "answer-unanswered";
       const statusText = isCorrect ? "✓ CORRECTA" : isAnswered ? "✕ INCORRECTA" : "— SIN RESPONDER";
       const section = index < 20 ? "Parte A" : "Parte B";
-      const number = index < 20 ? index + 1 : index - 19;
+      const number = (index < 20 ? examLayout.theory : examLayout.interpretation).indexOf(index < 20 ? index : index - 20) + 1;
       const studentText = isAnswered ? item.a[selected] : "Sin responder";
       const optionsMarkup = item.a.map((option, optionIndex) => {
         const optionClass = optionIndex === item.c
@@ -624,18 +702,133 @@
       attempt.teacherScore = total;
       attempt.teacherGradeOutOfTen = Number(gradeOutOfTen.toFixed(2));
       attempt.teacherGradedAt = new Date().toISOString();
-      try { localStorage.setItem(EXAM_KEY, JSON.stringify(attempt)); } catch (error) {
+      let isActiveAttempt = false;
+      try {
+        const activeAttempt = JSON.parse(localStorage.getItem(EXAM_KEY) || "null");
+        isActiveAttempt = activeAttempt?.id === attempt.id;
+        if (isActiveAttempt) localStorage.setItem(EXAM_KEY, JSON.stringify(attempt));
+        saveHistory(attempt);
+      } catch (error) {
         $("teacherGradeStatus").textContent = "No se pudo guardar la nota en este navegador.";
         return;
       }
-      if ($("score")) $("score").innerHTML = `${total.toLocaleString("es-AR", { maximumFractionDigits: 2 })}<small> / 10</small>`;
-      if ($("scoreText")) $("scoreText").textContent = `Nota docente: ${gradeOutOfTen.toFixed(2).replace(".", ",")}/10 · ${percent.toFixed(0)}% · Teoría e interpretación: ${abScore.toFixed(2).replace(".", ",")}/6 (${correct}/40 correctas) · Código: ${codeScore.toFixed(2).replace(".", ",")}/4.`;
-      if ($("gradeMessage")) {
-        $("gradeMessage").textContent = percent >= PASS_PERCENT ? "Evaluación aprobada según el criterio del 70% (7/10)." : "Evaluación no aprobada. El mínimo es 70% (7/10).";
-        $("gradeMessage").className = `grade-message ${percent >= PASS_PERCENT ? "pass" : "fail"}`;
+      if (isActiveAttempt) {
+        renderStudentSummary(attempt.answers, attempt);
+        if ($("score")) $("score").innerHTML = `${total.toLocaleString("es-AR", { maximumFractionDigits: 2 })}<small> / 10</small>`;
+        if ($("scoreText")) $("scoreText").textContent = `Nota docente: ${gradeOutOfTen.toFixed(2).replace(".", ",")}/10 · ${percent.toFixed(0)}% · ${performanceLabel(gradeOutOfTen)} · Teoría e interpretación: ${abScore.toFixed(2).replace(".", ",")}/6 (${correct}/40 correctas) · Código: ${codeScore.toFixed(2).replace(".", ",")}/4.`;
+        if ($("gradeMessage")) {
+          $("gradeMessage").textContent = percent >= PASS_PERCENT ? "Evaluación aprobada según el criterio del 70% (7/10)." : "Evaluación no aprobada. El mínimo es 70% (7/10).";
+          $("gradeMessage").className = `grade-message ${percent >= PASS_PERCENT ? "pass" : "fail"}`;
+        }
       }
-      $("teacherGradeStatus").textContent = "Calificación docente guardada en este navegador.";
+      $("teacherGradeStatus").textContent = "Calificación docente guardada en el historial de este navegador.";
+      renderTeacherDashboard();
     });
+  }
+
+  function renderTeacherDashboard() {
+    let root = $('teacherDashboard');
+    if (!root) {
+      root = document.createElement('section');
+      root.id = 'teacherDashboard';
+      root.className = 'teacher-dashboard panel';
+      root.innerHTML = '<div class="dashboard-heading"><div><span class="eyebrow">ADMINISTRACIÓN</span><h2>Panel de resultados</h2><p>Historial de entregas registradas en este navegador y dispositivo. Para reunir resultados de distintos dispositivos se necesita una base de datos compartida.</p></div><div class="dashboard-actions"><button id="exportExcelBtn" class="secondary" type="button">Exportar Excel (CSV)</button><button id="printReportBtn" class="primary" type="button">Imprimir / Guardar PDF</button></div></div><div class="dashboard-filters"><label>Filtrar por curso<input id="courseFilter" type="search" placeholder="Ej.: 5° A"></label><label>Buscar estudiante<input id="studentFilter" type="search" placeholder="Nombre o apellido"></label></div><div id="dashboardStats" class="dashboard-stats"></div><div id="dashboardTableWrap"></div><div id="questionAnalytics"></div>';
+      $('teacherReview')?.after(root);
+    }
+    const history = getHistory().sort((a, b) => new Date(b.date) - new Date(a.date));
+    const graded = history.filter(item => Number.isFinite(item.teacherScore));
+    const average = graded.length ? graded.reduce((sum, item) => sum + Number(item.teacherScore), 0) / graded.length : 0;
+    const passed = graded.filter(item => Number(item.teacherScore) >= 7).length;
+    $('dashboardStats').innerHTML = `
+      <div class="dashboard-stat"><strong>${history.length}</strong><span>Entregas registradas</span></div>
+      <div class="dashboard-stat"><strong>${graded.length}</strong><span>Calificadas</span></div>
+      <div class="dashboard-stat"><strong>${graded.length ? formatScore(average) : '—'}</strong><span>Promedio real / 10</span></div>
+      <div class="dashboard-stat"><strong>${graded.length ? Math.round(passed / graded.length * 100) + '%' : '—'}</strong><span>Aprobación entre calificadas</span></div>`;
+
+    const renderTable = () => {
+      const course = $('courseFilter').value.trim().toLowerCase();
+      const student = $('studentFilter').value.trim().toLowerCase();
+      const filtered = history.filter(item => `${item.student?.course || ''}`.toLowerCase().includes(course) && `${item.student?.name || ''} ${item.student?.lastName || ''}`.toLowerCase().includes(student));
+      $('dashboardTableWrap').innerHTML = filtered.length ? `<div class="table-scroll"><table class="results-table"><thead><tr><th>Estudiante</th><th>Curso</th><th>Fecha</th><th>Nota / 10</th><th>Estado</th><th>Informe</th></tr></thead><tbody>${filtered.map(item => {
+        const studentName = `${item.student?.lastName || ''}, ${item.student?.name || ''}`.replace(/^, |, $/g, '');
+        const grade = Number.isFinite(item.teacherScore) ? formatScore(item.teacherScore) : 'Pendiente';
+        const state = Number.isFinite(item.teacherScore) ? (item.teacherScore >= 7 ? 'Aprobado' : 'No aprobado') : 'Sin corregir';
+        return `<tr><td>${escapeHTML(studentName || 'Sin datos')}</td><td>${escapeHTML(item.student?.course || '—')}</td><td>${escapeHTML(new Date(item.date).toLocaleDateString('es-AR'))}</td><td>${grade}</td><td>${state}</td><td><button type="button" class="small-action" data-report-id="${escapeHTML(item.id || '')}">Informe</button> <button type="button" class="small-action" data-review-id="${escapeHTML(item.id || '')}">Revisar</button></td></tr>`;
+      }).join('')}</tbody></table></div>` : '<p class="empty-dashboard">No hay entregas que coincidan con los filtros.</p>';
+      $('dashboardTableWrap').querySelectorAll('[data-report-id]').forEach(button => button.addEventListener('click', () => {
+        const item = getHistory().find(record => record.id === button.dataset.reportId);
+        if (item) showIndividualReport(item);
+      }));
+      $('dashboardTableWrap').querySelectorAll('[data-review-id]').forEach(button => button.addEventListener('click', () => {
+        const item = getHistory().find(record => record.id === button.dataset.reviewId);
+        if (item) { renderTeacherReview(item); $('teacherReview')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+      }));
+    };
+    renderTable();
+    $('courseFilter').oninput = renderTable;
+    $('studentFilter').oninput = renderTable;
+
+    const stats = calculateQuestionStats(history);
+    $('questionAnalytics').innerHTML = `<h3>Preguntas con más errores</h3><p class="muted">Porcentaje calculado sobre las entregas que respondieron cada pregunta.</p><div class="analytics-list">${stats.slice(0, 8).map(item => `<div class="analytics-row"><strong>${item.label}</strong><div class="analytics-track"><span style="width:${item.rate}%"></span></div><span>${item.total ? Math.round(item.rate) + '%' : 'Sin datos'} (${item.errors}/${item.total})</span></div>`).join('')}</div>`;
+
+    $('exportExcelBtn').onclick = () => exportHistoryCSV(getHistory());
+    $('printReportBtn').onclick = () => printDashboard(getHistory());
+  }
+
+  function showIndividualReport(attempt) {
+    const student = attempt.student || {};
+    const score = Number.isFinite(attempt.teacherScore) ? Number(attempt.teacherScore) : null;
+    const ab = calculateABPoints(attempt.answers || {});
+    const code = Object.values(attempt.teacherCodeScores || {}).reduce((sum, value) => sum + Number(value || 0), 0);
+    const correct = allItems().filter(item => attempt.answers?.[item.id] === item.c).length;
+    const theoryScore = Number((allItems().slice(0, 20).filter(item => attempt.answers?.[item.id] === item.c).length * 0.1).toFixed(2));
+    const interpretationScore = Number((allItems().slice(20).filter(item => attempt.answers?.[item.id] === item.c).length * 0.2).toFixed(2));
+    const codeBreakdown = [1, 2, 3, 4, 5].map(index => `Ej. ${index}: ${formatScore(attempt.teacherCodeScores?.[`answer${index}`] || 0)}/0,80`).join(' · ');
+    const html = `<div class="individual-report"><h3>Informe individual</h3><p><strong>Estudiante:</strong> ${escapeHTML(student.name || '')} ${escapeHTML(student.lastName || '')}</p><p><strong>Curso:</strong> ${escapeHTML(student.course || '—')}</p><p><strong>Fecha:</strong> ${escapeHTML(new Date(attempt.date).toLocaleString('es-AR'))}</p><div class="report-score">${score === null ? 'Pendiente de calificación' : `${formatScore(score)} / 10 · ${score >= 7 ? 'Aprobado' : 'No aprobado'} · ${performanceLabel(score)}`}</div><p>Parte A – Teoría: ${formatScore(theoryScore)}/2. Parte B – Interpretación: ${formatScore(interpretationScore)}/4. Parte C – Código: ${formatScore(code)}/4.</p><p><strong>Detalle de código:</strong> ${codeBreakdown}</p><p><strong>Respuestas correctas:</strong> ${correct}/40.</p><p><strong>Diagnóstico:</strong> ${correct < 20 ? 'Necesita reforzar conceptos básicos y lectura de código.' : correct < 32 ? 'Buen avance; conviene practicar los temas donde hubo errores.' : 'Buen dominio de teoría e interpretación; reforzar la resolución práctica si corresponde.'}</p><div class="report-actions"><button class="secondary" type="button" id="printIndividualReport">Imprimir / Guardar PDF</button><button class="secondary" type="button" id="closeIndividualReport">Cerrar informe</button></div></div>`;
+    const existing = $('individualReport');
+    if (existing) existing.remove();
+    const wrapper = document.createElement('div');
+    wrapper.id = 'individualReport';
+    wrapper.className = 'individual-report-overlay';
+    wrapper.innerHTML = html;
+    document.body.append(wrapper);
+    $('closeIndividualReport').onclick = () => wrapper.remove();
+    $('printIndividualReport').onclick = () => {
+      const printWindow = window.open('', '_blank');
+      if (!printWindow) { alert('Permití las ventanas emergentes para generar el informe PDF.'); return; }
+      const reportContent = wrapper.querySelector('.individual-report').innerHTML;
+      printWindow.onload = () => printWindow.print();
+      printWindow.document.write(`<!doctype html><html lang="es"><head><meta charset="utf-8"><title>Informe individual IPEM 146</title><style>body{font:14px Arial;padding:28px;color:#172033;line-height:1.5}h3{font-size:22px}.report-score{padding:12px;background:#f0f7ff;border-radius:8px;font-weight:bold}.report-actions{display:none}</style></head><body>${reportContent}</body></html>`);
+      printWindow.document.close();
+    };
+  }
+
+  function csvCell(value) { return `"${String(value ?? '').replace(/"/g, '""')}"`; }
+  function exportHistoryCSV(history) {
+    const header = ['Apellido', 'Nombre', 'Curso', 'Fecha', 'Teoria / 2', 'Interpretacion / 4', 'Codigo / 4', 'Nota / 10', 'Estado'];
+    const rows = history.map(item => {
+      const ab = calculateABPoints(item.answers || {});
+      const code = Object.values(item.teacherCodeScores || {}).reduce((sum, value) => sum + Number(value || 0), 0);
+      const grade = Number.isFinite(item.teacherScore) ? item.teacherScore : '';
+      return [item.student?.lastName, item.student?.name, item.student?.course, new Date(item.date).toLocaleString('es-AR'), calculateABPoints(Object.fromEntries(allItems().slice(0, 20).map(q => [q.id, item.answers?.[q.id]]))), ab - calculateABPoints(Object.fromEntries(allItems().slice(0, 20).map(q => [q.id, item.answers?.[q.id]]))), code, grade, grade === '' ? 'Pendiente' : grade >= 7 ? 'Aprobado' : 'No aprobado'].map(csvCell).join(';');
+    });
+    const blob = new Blob(['\ufeff' + [header.map(csvCell).join(';'), ...rows].join('\r\n')], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a'); link.href = url; link.download = 'informe_ipem146_resultados.csv'; link.click(); URL.revokeObjectURL(url);
+  }
+
+  function printDashboard(history) {
+    const rows = history.map(item => {
+      const ab = calculateABPoints(item.answers || {});
+      const code = Object.values(item.teacherCodeScores || {}).reduce((sum, value) => sum + Number(value || 0), 0);
+      const score = Number.isFinite(item.teacherScore) ? formatScore(item.teacherScore) : 'Pendiente';
+      return `<tr><td>${escapeHTML(item.student?.lastName || '')}, ${escapeHTML(item.student?.name || '')}</td><td>${escapeHTML(item.student?.course || '')}</td><td>${new Date(item.date).toLocaleDateString('es-AR')}</td><td>${formatScore(ab)}</td><td>${formatScore(code)}</td><td>${score}</td><td>${Number.isFinite(item.teacherScore) ? (item.teacherScore >= 7 ? 'Aprobado' : 'No aprobado') : 'Pendiente'}</td></tr>`;
+    }).join('');
+    const win = window.open('', '_blank');
+    if (!win) { alert('El navegador bloqueó la ventana. Permití las ventanas emergentes para imprimir o guardar el PDF.'); return; }
+    win.onload = () => win.print();
+    win.document.write(`<!doctype html><html lang="es"><head><meta charset="utf-8"><title>Informe IPEM 146</title><style>body{font:14px Arial;padding:24px;color:#172033}h1{font-size:22px}table{width:100%;border-collapse:collapse}th,td{border:1px solid #bbb;padding:8px;text-align:left}th{background:#edf2f7}@media print{button{display:none}}</style></head><body><h1>IPEM 146 · Informe de resultados</h1><p>Fecha de emisión: ${new Date().toLocaleString('es-AR')}</p><table><thead><tr><th>Estudiante</th><th>Curso</th><th>Fecha</th><th>A+B / 6</th><th>C / 4</th><th>Nota / 10</th><th>Estado</th></tr></thead><tbody>${rows}</tbody></table><p>Escala: 0–3,99 desempeño bajo · 4–5,99 en proceso · 6–6,99 próximo a aprobar · 7–8,99 aprobado · 9–10 destacado.</p></body></html>`);
+    win.document.close();
   }
 
   function requestTeacherPassword(title) {
@@ -670,6 +863,17 @@
     });
   }
 
+  async function openTeacherDashboard() {
+    const password = await requestTeacherPassword("Contraseña docente para abrir el panel de resultados");
+    if (password === null) return;
+    if (password !== TEACHER_PASSWORD) {
+      window.alert("Contraseña incorrecta. No se abrió el panel docente.");
+      return;
+    }
+    renderTeacherDashboard();
+    $("teacherDashboard")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
   async function openTeacherReview() {
     const attempt = (() => { try { return JSON.parse(localStorage.getItem(EXAM_KEY) || "null"); } catch { return null; } })();
     if (!attempt) {
@@ -685,6 +889,7 @@
       return;
     }
     renderTeacherReview(attempt);
+    renderTeacherDashboard();
     if ($("teacherReview")) $("teacherReview").scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
@@ -701,8 +906,9 @@
       return;
     }
     const unanswered = totalQuestions - Object.keys(answers).length;
-    const confirmText = unanswered > 0
-      ? `Tenés ${unanswered} pregunta(s) sin responder. ¿Querés entregar igualmente? El docente revisará el examen.`
+    const emptyExercises = Array.from(document.querySelectorAll(".code-answer")).filter(field => !field.value.trim()).length;
+    const confirmText = unanswered > 0 || emptyExercises > 0
+      ? `Tenés ${unanswered} pregunta(s) y ${emptyExercises} ejercicio(s) de código sin completar. ¿Querés entregar igualmente? El docente revisará el examen.`
       : "¿Confirmás la entrega? El examen quedará bloqueado hasta la revisión docente.";
     if (!window.confirm(confirmText)) return;
     const button = $("gradeBtn");
@@ -710,10 +916,12 @@
     const codeAnswersNow = Object.fromEntries(Array.from(document.querySelectorAll(".code-answer"), field => [field.id, field.value]));
     const attempt = {
       student, answers: { ...answers }, codeAnswers: codeAnswersNow,
-      date: new Date().toISOString(), version: 7, teacherCodeScores: {}
+      date: new Date().toISOString(), version: 8, teacherCodeScores: {}, layout: examLayout,
+      id: `${Date.now()}_${student.lastName.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`
     };
     try {
       localStorage.setItem(EXAM_KEY, JSON.stringify(attempt));
+      saveHistory(attempt);
       localStorage.removeItem(DRAFT_KEY);
       showCorrection(attempt.answers, null, attempt.date, attempt);
     } catch (error) {
@@ -750,9 +958,14 @@
         key === EXAM_KEY || key === DRAFT_KEY || key.startsWith("ipem146_js_examen_intento_unico")
       );
       keysToRemove.forEach(key => localStorage.removeItem(key));
+      localStorage.removeItem(LAYOUT_KEY);
+      examLayout = makeExamLayout();
+      localStorage.setItem(LAYOUT_KEY, JSON.stringify(examLayout));
 
       answers = {};
       codeAnswers = {};
+      renderQuestions(theory, "theoryQuestions", "t");
+      renderQuestions(interpretation, "interpretQuestions", "i");
       examLocked = false;
       isGrading = false;
 
@@ -788,7 +1001,7 @@
       }
       if (button) {
         button.disabled = false;
-        button.textContent = "Eliminar datos guardados y habilitar nuevo intento";
+        button.textContent = "Eliminar intento activo y habilitar nuevo";
       }
       updateProgress();
       if (status) status.textContent =
@@ -814,6 +1027,7 @@
         student,
         answers: { ...answers },
         codeAnswers: Object.fromEntries(Array.from(document.querySelectorAll(".code-answer"), field => [field.id, field.value])),
+        layout: examLayout,
         updatedAt: new Date().toISOString()
       }));
     } catch (error) {
@@ -866,19 +1080,23 @@
       if (!attempt || !attempt.answers || typeof attempt.answers !== "object") {
         throw new Error("Registro de intento inválido");
       }
-      // Si el intento proviene de la escala anterior (90 puntos), se conserva
-      // la entrega, pero se elimina la nota vieja para recalcularla sobre 10.
+      // Los intentos de versiones anteriores a la escala sobre 10 se conservan,
+      // pero su calificación se recalcula con la escala actual.
       if (Number(attempt.version || 0) < 7) {
         delete attempt.teacherScore;
         delete attempt.teacherGradeOutOfTen;
         delete attempt.teacherGradedAt;
         attempt.teacherCodeScores = {};
-        attempt.version = 6;
+        attempt.version = 8;
         try { localStorage.setItem(EXAM_KEY, JSON.stringify(attempt)); } catch (error) {
           console.warn("No se pudo actualizar la versión de la evaluación:", error);
         }
       }
       answers = attempt.answers;
+      if (!attempt.id) attempt.id = `${attempt.date || Date.now()}_${(attempt.student?.lastName || "estudiante").toLowerCase()}`;
+      if (!attempt.layout) attempt.layout = examLayout;
+      saveHistory(attempt);
+      try { localStorage.setItem(EXAM_KEY, JSON.stringify(attempt)); } catch {}
       if (attempt.student) {
         if ($("studentName")) $("studentName").value = attempt.student.name || "";
         if ($("studentLastName")) $("studentLastName").value = attempt.student.lastName || "";
@@ -935,6 +1153,7 @@
   }
 
   function init() {
+    loadExamLayout();
     renderQuestions(theory, "theoryQuestions", "t");
     renderQuestions(interpretation, "interpretQuestions", "i");
     initTabs();
@@ -948,6 +1167,7 @@
       if ($(id)) $(id).addEventListener("input", saveDraft);
     });
     if ($("deleteSavedBtn")) $("deleteSavedBtn").addEventListener("click", deleteSavedAttempt);
+    if ($("teacherDashboardBtn")) $("teacherDashboardBtn").addEventListener("click", openTeacherDashboard);
 
     // No existe reinicio para el estudiante. El docente debe publicar una nueva versión.
     if ($("resetBtn")) {

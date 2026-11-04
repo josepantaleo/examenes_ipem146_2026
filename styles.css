@@ -9,6 +9,7 @@ button,input,textarea{font:inherit}button:focus-visible,input:focus-visible,text
 .intro{padding:24px;display:grid;grid-template-columns:1.1fr 1fr;gap:24px;align-items:center}.intro h2,.finish h2{font:600 1.4rem 'Space Grotesk';margin:0 0 6px}.intro p,.finish p{margin:0;color:var(--muted);font-size:.94rem}.progress-label{display:flex;justify-content:space-between;gap:10px;font-size:.84rem;margin-bottom:9px}.progress-label strong{font-variant-numeric:tabular-nums}
 .progress{height:10px;background:#e9eef6;border-radius:99px;overflow:hidden}.progress div{height:100%;width:0;background:linear-gradient(90deg,var(--blue),var(--cyan));transition:width .25s}
 .tabs{display:flex;gap:9px;margin:25px 0 22px;flex-wrap:wrap}.tab{border:1px solid var(--line);background:#fff;color:#526078;padding:12px 18px;border-radius:11px;font-weight:700;cursor:pointer}.tab:hover{border-color:#9bbcf4;background:#f8fbff}.tab.active{background:var(--navy);border-color:var(--navy);color:#fff}
+.tab.grade-action{margin-left:auto;background:var(--blue);border-color:var(--blue);color:#fff}.tab.grade-action:hover{background:#1d4ed8;border-color:#1d4ed8}.tab.grade-action:disabled{opacity:.55;cursor:not-allowed;transform:none}
 .section{display:none}.section.active{display:block}.section-heading{margin:25px 0 17px}.eyebrow{font-size:.72rem;letter-spacing:.13em;font-weight:700;color:var(--blue)}.section-heading h2{font:600 1.75rem 'Space Grotesk';margin:4px 0}.section-heading p,.muted{color:var(--muted);margin:0}
 .question{padding:21px 23px;margin:13px 0}.question h3{font-size:1rem;line-height:1.55;margin:0 0 13px}.q-number{color:var(--blue);font-weight:700;margin-right:7px}.question-code{white-space:pre;overflow-x:auto;background:#101c2d;color:#dbeafe;border-radius:10px;padding:14px 16px;margin:12px 0 15px;font:.86rem/1.65 Consolas,monospace}
 .options{display:grid;gap:9px}.option{display:flex;align-items:flex-start;gap:11px;padding:11px 13px;border:1px solid var(--line);border-radius:10px;cursor:pointer;font-size:.94rem}.option:hover{border-color:#91b8fa;background:#f8fbff}.option input{margin-top:5px;accent-color:var(--blue);flex:0 0 auto}.option.correct{border-color:#86d4a0;background:#effaf2}.option.incorrect{border-color:#f0a6a0;background:#fff4f2}
@@ -19,7 +20,7 @@ textarea{width:100%;min-height:110px;resize:vertical;border:1px solid #d5deea;bo
 .solution-btn,.primary,.secondary{border:0;border-radius:10px;padding:12px 17px;font-weight:700;cursor:pointer;margin-top:12px}.solution-btn:hover,.primary:hover,.secondary:hover{filter:brightness(.97);transform:translateY(-1px)}.solution-btn{background:#eaf1ff;color:#1d4ed8}.solution{margin-top:15px;padding:16px;background:#f3f8ff;border-radius:10px;border:1px solid #dce9ff}.solution pre{background:#10243e;padding:14px;border-radius:8px;color:#e4f0ff}.solution p{font-size:.9rem}.solution .result{font-weight:700;color:var(--green)}.hidden{display:none!important}
 .finish{margin-top:30px;padding:24px;display:grid;grid-template-columns:1fr auto;gap:12px 20px;align-items:center}.score{font:700 2.6rem 'Space Grotesk';color:var(--blue);text-align:center;white-space:nowrap}.score small{font-size:.9rem;color:var(--muted)}.finish-actions{grid-column:1/-1;display:flex;gap:10px;flex-wrap:wrap}.primary{background:var(--blue);color:white}.secondary{background:#edf1f6;color:#344054}.primary:disabled,.secondary:disabled{opacity:.55;cursor:not-allowed;transform:none}.grade-message{grid-column:1/-1!important;font-weight:600!important}.grade-message.pass{color:var(--green)}.grade-message.fail{color:var(--red)}
 footer{text-align:center;color:#8490a3;font-size:.8rem;padding:28px 8px}
-@media(max-width:680px){.hero{padding:38px 16px}.container{width:calc(100% - 22px);margin-top:18px}.intro{grid-template-columns:1fr;gap:18px;padding:19px}.tabs{display:grid;grid-template-columns:1fr;margin:20px 0}.tab{text-align:left}.question,.exercise{padding:16px}.finish{grid-template-columns:1fr auto;padding:18px}.score{font-size:2.1rem}.section-heading h2{font-size:1.5rem}}
+@media(max-width:680px){.tab.grade-action{margin-left:0;text-align:center}.hero{padding:38px 16px}.container{width:calc(100% - 22px);margin-top:18px}.intro{grid-template-columns:1fr;gap:18px;padding:19px}.tabs{display:grid;grid-template-columns:1fr;margin:20px 0}.tab{text-align:left}.question,.exercise{padding:16px}.finish{grid-template-columns:1fr auto;padding:18px}.score{font-size:2.1rem}.section-heading h2{font-size:1.5rem}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
 
 /* Identificación del estudiante y herramientas docentes */
@@ -49,3 +50,41 @@ footer{text-align:center;color:#8490a3;font-size:.8rem;padding:28px 8px}
 .password-actions{display:flex;justify-content:flex-end;gap:9px;margin-top:8px}
 .password-actions button{margin:0}
 @media(max-width:520px){.password-dialog{padding:19px}}
+
+/* Panel docente, reportes, analítica y escala de desempeño */
+.teacher-dashboard{margin-top:18px;padding:22px;grid-column:1/-1}
+.dashboard-heading{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap}
+.dashboard-heading h2{font:600 1.35rem 'Space Grotesk';margin:4px 0}
+.dashboard-heading p{margin:0;color:var(--muted);font-size:.9rem}
+.dashboard-actions{display:flex;gap:8px;flex-wrap:wrap}
+.dashboard-actions button{margin:0}
+.dashboard-filters{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:18px 0}
+.dashboard-filters label{display:grid;gap:6px;font-size:.85rem;font-weight:700}
+.dashboard-filters input{width:100%;border:1px solid #d5deea;border-radius:9px;padding:10px 12px}
+.dashboard-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:14px 0 20px}
+.dashboard-stat{display:flex;flex-direction:column;gap:3px;padding:14px;border:1px solid var(--line);border-radius:11px;background:#f8fafc}
+.dashboard-stat strong{font:700 1.55rem 'Space Grotesk';color:var(--blue)}
+.dashboard-stat span{font-size:.8rem;color:var(--muted);font-weight:650}
+.table-scroll{overflow-x:auto}
+.results-table{width:100%;border-collapse:collapse;font-size:.88rem}
+.results-table th,.results-table td{padding:10px 11px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}
+.results-table th{background:#f1f5f9;color:#344054}
+.results-table tbody tr:hover{background:#f8fbff}
+.small-action{border:0;border-radius:7px;padding:6px 10px;background:#eaf1ff;color:#1d4ed8;font-weight:700;cursor:pointer}
+.empty-dashboard{padding:18px;background:#f8fafc;border-radius:10px;color:var(--muted)}
+#questionAnalytics{margin-top:22px}
+#questionAnalytics h3{font:600 1.08rem 'Space Grotesk';margin-bottom:4px}
+.analytics-list{display:grid;gap:9px;margin-top:12px}
+.analytics-row{display:grid;grid-template-columns:42px minmax(80px,1fr) 110px;gap:10px;align-items:center;font-size:.82rem}
+.analytics-track{height:10px;background:#edf1f6;border-radius:99px;overflow:hidden}
+.analytics-track span{display:block;height:100%;background:#d97706;border-radius:99px}
+.learning-tip{padding:12px 14px;background:#f1f6ff;border-left:4px solid #4f83d1;border-radius:8px;color:#344054}
+.individual-report-overlay{position:fixed;inset:0;z-index:1000;background:#10182899;display:grid;place-items:center;padding:18px}
+.individual-report{width:min(560px,100%);max-height:85vh;overflow:auto;background:white;border-radius:15px;padding:22px;box-shadow:0 20px 60px #10182840}
+.individual-report h3{margin-top:0;font:600 1.25rem 'Space Grotesk'}
+.report-score{padding:13px;background:#f0f7ff;border-radius:9px;font-weight:800;font-size:1.1rem;margin:12px 0}
+.individual-report button{margin-top:12px}
+@media(max-width:680px){.teacher-dashboard{padding:16px}.dashboard-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.dashboard-filters{grid-template-columns:1fr}.analytics-row{grid-template-columns:34px minmax(60px,1fr) 90px;gap:7px;font-size:.75rem}.dashboard-actions{width:100%}.dashboard-actions button{flex:1}}
+@media print{.hero,.student-data,.intro,.tabs,.section,.finish-actions,.teacher-tools,.dashboard-actions,.dashboard-filters,.password-dialog{display:none!important}.teacher-dashboard{border:0;box-shadow:none;margin:0;padding:0}.results-table{font-size:10px}}
+.teacher-tool-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:12px}.teacher-tool-actions button{margin:0}
+.report-actions{display:flex;gap:9px;flex-wrap:wrap}.report-actions button{margin:0}
