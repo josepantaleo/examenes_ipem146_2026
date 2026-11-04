@@ -29,7 +29,7 @@
     <section class="intro panel">
       <div>
         <h2>Prepará tu evaluación</h2>
-        <p>La evaluación tiene 45 actividades: 20 teóricas, 20 de interpretación y 5 ejercicios de corrección de código. Las partes A y B suman 50 puntos (1,25 puntos por respuesta correcta) y la parte C suma hasta 50 puntos (10 por cada ejercicio de código). El docente revisará las respuestas y asignará la calificación.</p>
+        <p>La evaluación tiene 45 actividades: 20 teóricas, 20 de interpretación y 5 ejercicios de corrección de código. La parte A suma 2 puntos (0,10 por respuesta), la parte B suma 5 puntos (0,25 por respuesta) y la parte C suma 3 puntos (0,60 por ejercicio de código). Total: 10 puntos. Se aprueba con 7/10 (70%).</p>
       </div>
       <div class="progress-wrap">
         <div class="progress-label"><span>Progreso</span><strong id="progressText">0 de 45</strong></div>
@@ -74,7 +74,7 @@ console.log("Cantidad de productos:", productos.length);</code></pre>
       <div class="section-heading">
         <span class="eyebrow">PARTE C · 5 EJERCICIOS</span>
         <h2>Corrección de código</h2>
-        <p>Detectá los errores y escribí el código corregido. No se permite copiar, cortar, pegar ni arrastrar texto en los editores. El docente revisará cada ejercicio y asignará hasta 10 puntos; esta parte aporta hasta 50 puntos al resultado final. La evaluación completa suma 100 puntos.</p>
+        <p>Detectá los errores y escribí el código corregido. No se permite copiar, cortar, pegar ni arrastrar texto en los editores. El docente revisará cada ejercicio y asignará hasta 0,60 puntos; esta parte aporta hasta 3 puntos. La evaluación completa suma 10 puntos.</p>
       </div>
 
       <article class="exercise panel">
@@ -144,8 +144,8 @@ try {
     </section>
 
     <section class="finish panel">
-      <div><span class="eyebrow">RESULTADO</span><h2>Tu evaluación</h2><p id="scoreText">La calificación total es sobre 100 puntos: 50 de las partes A y B y 50 de la parte C. El docente revisará las respuestas y asignará la nota. Se aprueba con 70 puntos (7/10).</p></div>
-      <div class="score" id="score">—<small> / 100</small></div>
+      <div><span class="eyebrow">RESULTADO</span><h2>Tu evaluación</h2><p id="scoreText">La evaluación suma 10 puntos: teoría 2, interpretación 5 y código 3. Se aprueba con 7/10 (70%).</p></div>
+      <div class="score" id="score">—<small> / 10</small></div>
       <div class="finish-actions">
         <button id="gradeBtn" class="primary" type="button">Finalizar y corregir</button>
         <button id="resetBtn" class="secondary" type="button" hidden>Reiniciar</button>
@@ -157,13 +157,24 @@ try {
     </section>
 
     <section class="teacher-tools panel">
-      <div><h2>Administración docente</h2><p>Elimina el intento y el borrador guardados en este navegador. Al confirmar, el formulario se limpia y permite ingresar nuevamente nombre, apellido, curso y todas las respuestas. Este reinicio borra únicamente los datos locales de este navegador.</p></div>
+      <div><h2>Administración docente</h2><p>Elimina el intento y el borrador guardados en este navegador. Al confirmar, el formulario se limpia y permite ingresar nuevamente nombre, apellido, curso y todas las respuestas. Este reinicio borra únicamente los datos locales de este navegador. La contraseña es una barrera de interfaz; para seguridad real se necesita validación en un servidor.</p></div>
       <button id="deleteSavedBtn" class="danger" type="button">Eliminar datos guardados y habilitar nuevo intento</button>
       <p id="deleteStatus" class="delete-status" aria-live="polite"></p>
     </section>
 
     <footer>Material de evaluación modelo · Formación Profesional en Diseño Web · IPEM 146</footer>
   </main>
+  <dialog id="teacherPasswordDialog" class="password-dialog" aria-labelledby="teacherPasswordTitle">
+    <form id="teacherPasswordForm" method="dialog">
+      <h2 id="teacherPasswordTitle">Acceso docente</h2>
+      <label for="teacherPasswordInput">Contraseña</label>
+      <input id="teacherPasswordInput" type="password" autocomplete="current-password" required>
+      <div class="password-actions">
+        <button type="button" class="secondary" onclick="document.getElementById('teacherPasswordDialog').close()">Cancelar</button>
+        <button type="submit" class="primary">Aceptar</button>
+      </div>
+    </form>
+  </dialog>
   <script src="app.js"></script>
 </body>
 </html>
