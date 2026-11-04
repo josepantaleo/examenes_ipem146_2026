@@ -453,90 +453,199 @@
     codeAnswers = { ...saved };
   }
 
-  function showCorrection(savedAnswers, savedScore = null, savedDate = null, attempt = {}) {
-    let score = 0;
+  function renderStudentSummary(savedAnswers) {
+    const root = $("studentSummary");
+    if (!root) return;
+    const items = allItems();
+    let correct = 0;
+    let incorrect = 0;
+    let unanswered = 0;
+    const rows = items.map((item, index) => {
+      const selected = savedAnswers?.[item.id];
+      const isAnswered = Number.isInteger(selected) && selected >= 0 && selected < item.a.length;
+      const isCorrect = isAnswered && selected === item.c;
+      if (isCorrect) correct++;
+      else if (isAnswered) incorrect++;
+      else unanswered++;
+      const section = index < 20 ? "Parte A · Teoría" : "Parte B · Interpretación";
+      const number = index < 20 ? index + 1 : index - 19;
+      const statusClass = isCorrect ? "student-correct" : isAnswered ? "student-incorrect" : "student-unanswered";
+      const status = isCorrect ? "✓ CORRECTA" : isAnswered ? "✕ INCORRECTA" : "— SIN RESPONDER";
+      return `<article class="student-summary-item ${statusClass}">
+        <div class="student-summary-top"><strong>${section} · Pregunta ${number}</strong><span>${status}</span></div>
+        <p><strong>Tu respuesta:</strong> ${isAnswered ? escapeHTML(item.a[selected]) : "No respondiste esta pregunta."}</p>
+        ${!isCorrect ? `<p><strong>Respuesta correcta:</strong> ${escapeHTML(item.a[item.c])}</p>` : ""}
+        ${item.e ? `<small>${escapeHTML(item.e)}</small>` : ""}
+      </article>`;
+    }).join("");
+    const abPoints = correct * 1.25;
+    root.innerHTML = `<h3>Resumen de tus respuestas · Partes A y B</h3>
+      <div class="student-summary-counts">
+        <div class="student-count count-correct"><strong>${correct}</strong><span>Correctas</span></div>
+        <div class="student-count count-incorrect"><strong>${incorrect}</strong><span>Incorrectas</span></div>
+        <div class="student-count count-unanswered"><strong>${unanswered}</strong><span>Sin responder</span></div>
+      </div>
+      <p class="student-summary-score">Puntaje de las partes A y B: <strong>${abPoints.toFixed(2).replace(".", ",")} / 50 puntos</strong> (${correct} de 40 correctas). La parte C (código) queda pendiente de evaluación docente.</p>
+      <details class="student-summary-details" open><summary>Ver detalle de las 40 preguntas</summary><div class="student-summary-list">${rows}</div></details>`;
+  }
 
+  function showCorrection(savedAnswers, savedScore = null, savedDate = null, attempt = {}) {
+    // Al entregar, se muestra al estudiante el resumen de A y B con aciertos y errores.
+    renderStudentSummary(savedAnswers);
     allItems().forEach(item => {
       const selected = savedAnswers[item.id];
       const card = $(item.id);
       if (!card) return;
-
-      const feedback = card.querySelector(".feedback");
-      card.querySelectorAll(".option").forEach((label, index) => {
-        label.classList.remove("correct", "incorrect");
-        const radio = label.querySelector("input");
-        if (radio) {
-          radio.disabled = true;
-          radio.checked = selected === index;
-        }
-        if (index === item.c) label.classList.add("correct");
-        if (selected === index && selected !== item.c) label.classList.add("incorrect");
+      card.querySelectorAll('input[type="radio"]').forEach((radio, index) => {
+        radio.disabled = true;
+        radio.checked = selected === index;
       });
-
-      if (selected === item.c) {
-        score++;
-        if (feedback) {
-          feedback.textContent = `¡Correcto! ${item.e}`;
-          feedback.className = "feedback good";
-        }
-      } else if (feedback) {
-        feedback.textContent = `${selected === undefined ? "Sin responder. " : "Respuesta incorrecta. "}${item.e}`;
-        feedback.className = "feedback bad";
-      }
+      const feedback = card.querySelector(".feedback");
+      if (feedback) feedback.textContent = "Respuesta entregada. Pendiente de revisión docente.";
     });
 
-    if (savedScore !== null && Number.isFinite(Number(savedScore))) score = Number(savedScore);
-    const aiResults = Array.isArray(attempt.aiCorrection) ? attempt.aiCorrection : [];
-    const aiScore = aiResults.reduce((sum, item) => sum + (Number(item.score) || 0), 0);
-    const finalScore = score + aiScore;
-    const maxScore = totalQuestions + 50;
-    const percent = finalScore / maxScore * 100;
-    const displayedPercent = percent.toFixed(1).replace(".", ",");
-    const gradeOutOfTen = (percent / 10).toFixed(1).replace(".", ",");
-
-    if ($("score")) $("score").innerHTML = `${finalScore}<small> / ${maxScore}</small>`;
-    if ($("scoreText")) {
-      const student = attempt.student || {};
-      const identity = [student.name, student.lastName, student.course].filter(Boolean).join(" · ");
-      $("scoreText").textContent = `${identity ? identity + " | " : ""}Resultado: ${displayedPercent}% | Nota: ${gradeOutOfTen}/10. Parte A y B: ${score}/40. Parte C corregida por IA: ${aiScore}/50.`;
-    }
-    if ($("gradeMessage")) {
-      $("gradeMessage").textContent = percent >= PASS_PERCENT
-        ? `Evaluación aprobada. Alcanzaste el ${PASS_PERCENT}% o más.`
-        : `Evaluación no aprobada. El mínimo de referencia es ${PASS_PERCENT}%.`;
-      $("gradeMessage").className = `grade-message ${percent >= PASS_PERCENT ? "pass" : "fail"}`;
-    }
-    renderAIFeedback(aiResults);
-    ["studentName", "studentLastName", "studentCourse"].forEach(id => { if ($(id)) $(id).disabled = true; });
-
-    const button = $("gradeBtn");
-    if (button) {
-      button.disabled = true;
-      button.textContent = "EXAMEN FINALIZADO";
-    }
-    document.querySelectorAll(".code-answer").forEach(field => { field.disabled = true; });
-    const codeDone = Object.values(codeAnswers).filter(value => String(value).trim()).length;
-    if ($("scoreText")) $("scoreText").textContent += ` Ejercicios respondidos: ${codeDone}/5.`;
-    const reset = $("resetBtn");
-    if (reset) {
-      reset.disabled = true;
-      reset.hidden = true;
-    }
-
-    if (savedDate && $("scoreText")) {
-      const date = new Date(savedDate);
-      if (!Number.isNaN(date.getTime())) {
-        $("scoreText").textContent += ` Fecha: ${date.toLocaleString("es-AR")}.`;
+    const student = attempt.student || {};
+    const identity = [student.name, student.lastName, student.course].filter(Boolean).join(" · ");
+    if (Number.isFinite(attempt.teacherScore)) {
+      if ($("score")) $("score").innerHTML = `${Number(attempt.teacherScore).toLocaleString("es-AR", { maximumFractionDigits: 2 })}<small> / 100</small>`;
+      if ($("scoreText")) $("scoreText").textContent = `${identity ? identity + " | " : ""}Nota docente: ${Number(attempt.teacherGradeOutOfTen || 0).toFixed(1).replace(".", ",")}/10. Calificación guardada.`;
+      if ($("gradeMessage")) {
+        const approved = attempt.teacherScore >= 70;
+        $("gradeMessage").textContent = approved ? "Evaluación aprobada según el criterio del 70% (7/10)." : "Evaluación no aprobada. El mínimo es 70% (7/10).";
+        $("gradeMessage").className = `grade-message ${approved ? "pass" : "fail"}`;
+      }
+    } else {
+      if ($("score")) $("score").innerHTML = `Pendiente<small> / 100</small>`;
+      if ($("scoreText")) $("scoreText").textContent = `${identity ? identity + " | " : ""}Entrega registrada. La calificación será asignada por el docente.`;
+      if ($("gradeMessage")) {
+        $("gradeMessage").textContent = "Examen entregado. El docente debe abrir la evaluación para consultar la clave y calificar los ejercicios.";
+        $("gradeMessage").className = "grade-message";
       }
     }
-
+    ["studentName", "studentLastName", "studentCourse"].forEach(id => { if ($(id)) $(id).disabled = true; });
+    document.querySelectorAll(".code-answer").forEach(field => { field.disabled = true; });
+    const button = $("gradeBtn");
+    if (button) { button.disabled = true; button.textContent = "EXAMEN ENTREGADO"; }
+    if ($("teacherReviewBtn")) $("teacherReviewBtn").hidden = false;
+    if ($("resetBtn")) { $("resetBtn").disabled = true; $("resetBtn").hidden = true; }
     examLocked = true;
     updateProgress();
   }
 
+  function modelAnswers() {
+    return [
+      `const precio = Number("1500");\nconst cantidad = 3;\nconst total = precio * cantidad;\n\nif (total === 4500) {\n  console.log("Total correcto");\n}`,
+      `function calcularDescuento(precio, porcentaje) {\n  const descuento = precio * (porcentaje / 100);\n  return precio - descuento;\n}\n\nconsole.log(calcularDescuento(10000, 20)); // 8000`,
+      `const notas = [4, 8, 6, 3, 10];\n\nfor (let i = 0; i < notas.length; i++) {\n  if (notas[i] >= 6) {\n    console.log(notas[i]);\n  }\n}`,
+      `const alumno = {\n  nombre: "Lucía",\n  nota: 9\n};\n\nconsole.log(alumno.nombre);\nconsole.log(alumno.nota);`,
+      `const respuesta = '{"ubicacion":"IPEM 146","temperatura":21}';\n\ntry {\n  const datos = JSON.parse(respuesta);\n  console.log(datos.temperatura);\n} catch (error) {\n  console.log(error.message);\n}`
+    ];
+  }
+
+  function renderTeacherReview(attempt) {
+    const root = $("teacherReview");
+    if (!root) return;
+    const items = allItems();
+    const correct = items.filter(item => attempt.answers?.[item.id] === item.c).length;
+    const codeAnswersNow = attempt.codeAnswers || {};
+    const savedCodeScores = attempt.teacherCodeScores || {};
+    const keys = items.map((item, index) => {
+      const selected = attempt.answers?.[item.id];
+      const isAnswered = Number.isInteger(selected) && selected >= 0 && selected < item.a.length;
+      const isCorrect = isAnswered && selected === item.c;
+      const statusClass = isCorrect ? "answer-correct" : isAnswered ? "answer-incorrect" : "answer-unanswered";
+      const statusText = isCorrect ? "✓ CORRECTA" : isAnswered ? "✕ INCORRECTA" : "— SIN RESPONDER";
+      const section = index < 20 ? "Parte A" : "Parte B";
+      const number = index < 20 ? index + 1 : index - 19;
+      const studentText = isAnswered ? item.a[selected] : "Sin responder";
+      const optionsMarkup = item.a.map((option, optionIndex) => {
+        const optionClass = optionIndex === item.c
+          ? "review-option review-option-correct"
+          : (isAnswered && optionIndex === selected ? "review-option review-option-incorrect" : "review-option");
+        const marker = optionIndex === item.c ? "✓ Correcta" : (isAnswered && optionIndex === selected ? "✕ Elegida" : "");
+        return `<li class="${optionClass}"><span>${escapeHTML(option)}</span>${marker ? `<strong>${marker}</strong>` : ""}</li>`;
+      }).join("");
+      return `<li class="teacher-answer ${statusClass}">
+        <div class="teacher-answer-top"><strong>${section} · Pregunta ${number}</strong><span class="answer-status">${statusText}</span></div>
+        <p><strong>Respuesta del estudiante:</strong> ${escapeHTML(studentText)}</p>
+        <p><strong>Respuesta correcta:</strong> ${escapeHTML(item.a[item.c])}</p>
+        <ul class="review-options-list">${optionsMarkup}</ul>
+        <small>${escapeHTML(item.e || "")}</small>
+      </li>`;
+    }).join("");
+    const exercises = modelAnswers().map((model, index) => `
+      <article class="ai-result">
+        <h4>Ejercicio ${index + 1} · Código corregido de referencia</h4>
+        <p class="reference-note">Este es un modelo de solución. El docente puede aceptar otras formas de resolver correctamente el ejercicio.</p>
+        <pre class="reference-code"><code>${escapeHTML(model)}</code></pre>
+        <p><strong>Código entregado por el estudiante:</strong></p>
+        <pre><code>${escapeHTML(codeAnswersNow[`answer${index + 1}`] || "Sin responder")}</code></pre>
+        <label>Calificación del docente (0 a 10)
+          <input class="teacher-code-score" data-index="${index + 1}" type="number" min="0" max="10" step="1" value="${Number.isInteger(savedCodeScores[`answer${index + 1}`]) ? savedCodeScores[`answer${index + 1}`] : 0}">
+        </label>
+      </article>`).join("");
+    root.innerHTML = `<h3>Evaluación docente · ${correct}/40 respuestas correctas · A y B: ${(correct / totalQuestions * 50).toFixed(2).replace(".", ",")}/50 puntos</h3>
+      <p>Las respuestas correctas aparecen en verde y las incorrectas en rojo. En cada pregunta se muestra la respuesta elegida, la respuesta correcta y una explicación.</p>
+      <details open><summary>Corrección de respuestas · Partes A y B</summary><ol class="teacher-answer-list">${keys}</ol></details>
+      <h3>Parte C · Corrección de código</h3>
+      <p>Las partes A y B valen 50 puntos en conjunto (1,25 por respuesta correcta). Compará el código entregado con el código corregido de referencia y asigná hasta 10 puntos por ejercicio: 50 puntos en la parte C.</p>${exercises}
+      <button id="saveTeacherGrade" class="primary" type="button">Guardar calificación docente</button>
+      <p id="teacherGradeStatus" aria-live="polite"></p>`;
+    $("saveTeacherGrade")?.addEventListener("click", () => {
+      const scores = {};
+      let valid = true;
+      root.querySelectorAll(".teacher-code-score").forEach(input => {
+        const value = Number(input.value);
+        if (!Number.isInteger(value) || value < 0 || value > 10) valid = false;
+        scores[`answer${input.dataset.index}`] = value;
+      });
+      if (!valid) {
+        $("teacherGradeStatus").textContent = "Ingresá un puntaje entero entre 0 y 10 en cada ejercicio.";
+        return;
+      }
+      const codeScore = Object.values(scores).reduce((sum, value) => sum + value, 0);
+      const abScore = (correct / totalQuestions) * 50;
+      const total = abScore + codeScore;
+      const percent = total;
+      const gradeOutOfTen = total / 10;
+      attempt.teacherCodeScores = scores;
+      attempt.teacherScore = total;
+      attempt.teacherGradeOutOfTen = Number(gradeOutOfTen.toFixed(1));
+      attempt.teacherGradedAt = new Date().toISOString();
+      try { localStorage.setItem(EXAM_KEY, JSON.stringify(attempt)); } catch (error) {
+        $("teacherGradeStatus").textContent = "No se pudo guardar la nota en este navegador.";
+        return;
+      }
+      if ($("score")) $("score").innerHTML = `${total.toLocaleString("es-AR", { maximumFractionDigits: 2 })}<small> / 100</small>`;
+      if ($("scoreText")) $("scoreText").textContent = `Nota docente: ${gradeOutOfTen.toFixed(1).replace(".", ",")}/10 · ${percent.toFixed(2).replace(".", ",")}% · Partes A y B: ${abScore.toFixed(2).replace(".", ",")}/50 (${correct}/40 correctas) · Código: ${codeScore}/50.`;
+      if ($("gradeMessage")) {
+        $("gradeMessage").textContent = percent >= PASS_PERCENT ? "Evaluación aprobada según el criterio del 70% (7/10)." : "Evaluación no aprobada. El mínimo es 70% (7/10).";
+        $("gradeMessage").className = `grade-message ${percent >= PASS_PERCENT ? "pass" : "fail"}`;
+      }
+      $("teacherGradeStatus").textContent = "Calificación docente guardada en este navegador.";
+    });
+  }
+
+  function openTeacherReview() {
+    const attempt = (() => { try { return JSON.parse(localStorage.getItem(EXAM_KEY) || "null"); } catch { return null; } })();
+    if (!attempt) {
+      window.alert("Todavía no hay un examen entregado para revisar.");
+      return;
+    }
+    const password = window.prompt("Contraseña docente para abrir la clave y evaluar:");
+    if (password === null) return;
+    // Funciona también en GitHub Pages: no depende de una API Node.js.
+    // Es una barrera básica de interfaz, no autenticación segura.
+    if (password !== "1") {
+      window.alert("Contraseña incorrecta. No se abrió la evaluación docente.");
+      return;
+    }
+    renderTeacherReview(attempt);
+    if ($("teacherReview")) $("teacherReview").scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
   async function grade() {
     if (examLocked || isGrading) return;
-
     const student = {
       name: $("studentName")?.value.trim() || "",
       lastName: $("studentLastName")?.value.trim() || "",
@@ -547,88 +656,105 @@
       $("studentName")?.focus();
       return;
     }
-
     const unanswered = totalQuestions - Object.keys(answers).length;
     const confirmText = unanswered > 0
-      ? `Tenés ${unanswered} pregunta(s) sin responder. ¿Querés finalizar igualmente? La IA corregirá los cinco ejercicios escritos.`
-      : "¿Confirmás la entrega? La IA corregirá los cinco ejercicios y el intento quedará bloqueado.";
+      ? `Tenés ${unanswered} pregunta(s) sin responder. ¿Querés entregar igualmente? El docente revisará el examen.`
+      : "¿Confirmás la entrega? El examen quedará bloqueado hasta la revisión docente.";
     if (!window.confirm(confirmText)) return;
-
-    isGrading = true;
     const button = $("gradeBtn");
-    if (button) { button.disabled = true; button.textContent = "CORRIGIENDO CON IA…"; }
-    if ($("gradeMessage")) $("gradeMessage").textContent = "La IA está analizando tus cinco ejercicios. No cierres esta página.";
-
-    const score = allItems().reduce((total, item) => total + (answers[item.id] === item.c ? 1 : 0), 0);
+    if (button) { button.disabled = true; button.textContent = "REGISTRANDO ENTREGA…"; }
     const codeAnswersNow = Object.fromEntries(Array.from(document.querySelectorAll(".code-answer"), field => [field.id, field.value]));
+    const attempt = {
+      student, answers: { ...answers }, codeAnswers: codeAnswersNow,
+      date: new Date().toISOString(), version: 5, teacherCodeScores: {}
+    };
     try {
-      const aiResponse = await fetch("/api/grade-code", {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ student, answers: codeAnswersNow })
-      });
-      if (!aiResponse.ok) {
-        const detail = await aiResponse.json().catch(() => ({}));
-        throw new Error(detail.error || `No se pudo conectar con el servicio de IA (HTTP ${aiResponse.status}).`);
-      }
-      const aiData = await aiResponse.json();
-      if (!Array.isArray(aiData.results) || aiData.results.length !== 5) throw new Error("La IA no devolvió la corrección completa de los cinco ejercicios.");
-
-      const attempt = {
-        student, answers: { ...answers }, codeAnswers: codeAnswersNow, score, total: totalQuestions,
-        aiCorrection: aiData.results, aiScore: aiData.results.reduce((sum, item) => sum + Number(item.score || 0), 0),
-        percentage: Number(((score + aiData.results.reduce((sum, item) => sum + Number(item.score || 0), 0)) / (totalQuestions + 50) * 100).toFixed(2)),
-        date: new Date().toISOString(), version: 3
-      };
-      try {
-        localStorage.setItem(EXAM_KEY, JSON.stringify(attempt));
-        localStorage.removeItem(DRAFT_KEY);
-      } catch (storageError) {
-        console.warn("La corrección terminó, pero no se pudo guardar el intento en este navegador:", storageError);
-        if ($("gradeMessage")) {
-          $("gradeMessage").textContent = "La corrección terminó, pero el navegador no pudo guardar el intento. Guardá o informá el resultado al docente.";
-        }
-      }
-      showCorrection(attempt.answers, attempt.score, attempt.date, attempt);
+      localStorage.setItem(EXAM_KEY, JSON.stringify(attempt));
+      localStorage.removeItem(DRAFT_KEY);
+      showCorrection(attempt.answers, null, attempt.date, attempt);
     } catch (error) {
-      console.error("Error al corregir con IA:", error);
-      if ($("gradeMessage")) {
-        $("gradeMessage").textContent = `No se pudo completar la corrección con IA: ${error.message} Podés volver a intentar; tus respuestas siguen en pantalla.`;
-        $("gradeMessage").className = "grade-message fail";
-      }
-      if (button) { button.disabled = false; button.textContent = "Reintentar corrección con IA"; }
-    } finally {
-      isGrading = false;
+      console.error("No se pudo guardar la entrega:", error);
+      if (button) { button.disabled = false; button.textContent = "Volver a entregar"; }
+      if ($("gradeMessage")) $("gradeMessage").textContent = "No se pudo guardar la entrega en este navegador. No cierres la página e informá al docente.";
     }
   }
 
-  function renderAIFeedback(results) {
-    const root = $("aiFeedback");
-    if (!root) return;
-    if (!Array.isArray(results) || !results.length) { root.innerHTML = ""; return; }
-    root.innerHTML = `<h3>Corrección automática de código con IA</h3>` + results.map((item, index) => `
-      <article class="ai-result"><div class="ai-result-heading"><strong>Ejercicio ${index + 1}</strong><span>${Number(item.score) || 0}/10 puntos</span></div>
-      <p>${escapeHTML(item.feedback || "Sin observaciones.")}</p>
-      ${item.strengths ? `<p><strong>Logrado:</strong> ${escapeHTML(item.strengths)}</p>` : ""}
-      ${item.improvements ? `<p><strong>Para mejorar:</strong> ${escapeHTML(item.improvements)}</p>` : ""}
-      ${item.suggestion ? `<p><strong>Orientación:</strong> ${escapeHTML(item.suggestion)}</p>` : ""}</article>`).join("");
-  }
-
-  async function deleteSavedAttempt() {
-    const password = window.prompt("Contraseña docente para eliminar los datos guardados:");
+  function deleteSavedAttempt() {
+    // Contraseña solicitada para evitar reinicios accidentales desde la interfaz.
+    // En GitHub Pages esta validación es del lado del navegador, no una protección segura.
+    const password = window.prompt("Ingresá la contraseña docente para eliminar los datos y habilitar un nuevo intento:");
     if (password === null) return;
+    if (password !== "1") {
+      window.alert("Contraseña incorrecta. No se eliminaron los datos del examen.");
+      const status = $("deleteStatus");
+      if (status) status.textContent = "Contraseña incorrecta. El examen sigue guardado.";
+      return;
+    }
+
+    const confirmed = window.confirm(
+      "¿Querés borrar el examen entregado y el borrador guardado en ESTE navegador?\n\n" +
+      "Al confirmar, se limpiarán los datos y podrás ingresar nuevamente nombre, apellido, curso y respuestas."
+    );
+    if (!confirmed) return;
+
     const status = $("deleteStatus");
+    const button = $("deleteSavedBtn");
     try {
-      const response = await fetch("/api/teacher/authorize-delete", {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ password })
+      // Este examen guarda los intentos en el navegador. No se consulta una API
+      // porque GitHub Pages no ejecuta server.js y esa llamada impedía reiniciar.
+      const keysToRemove = Object.keys(localStorage).filter(key =>
+        key === EXAM_KEY || key === DRAFT_KEY || key.startsWith("ipem146_js_examen_intento_unico")
+      );
+      keysToRemove.forEach(key => localStorage.removeItem(key));
+
+      answers = {};
+      codeAnswers = {};
+      examLocked = false;
+      isGrading = false;
+
+      document.querySelectorAll('input[type="radio"]').forEach(input => {
+        input.checked = false;
+        input.disabled = false;
       });
-      if (!response.ok) throw new Error("Contraseña incorrecta o servicio docente no disponible.");
-      localStorage.removeItem(EXAM_KEY);
-      localStorage.removeItem(DRAFT_KEY);
-      if (status) status.textContent = "Datos del examen eliminados de este navegador. La página se actualizará.";
-      window.setTimeout(() => window.location.reload(), 700);
+      ["studentName", "studentLastName", "studentCourse"].forEach(id => {
+        const field = $(id);
+        if (field) {
+          field.value = "";
+          field.disabled = false;
+        }
+      });
+      document.querySelectorAll(".code-answer").forEach(field => {
+        field.value = "";
+        field.disabled = false;
+      });
+      document.querySelectorAll(".feedback").forEach(feedback => { feedback.textContent = ""; });
+
+      if ($("score")) $("score").innerHTML = `—<small> / 100</small>`;
+      if ($("scoreText")) $("scoreText").textContent =
+        "Respondé las 40 preguntas y completá los 5 ejercicios. El docente asignará la nota sobre 100 puntos: 50 para A y B, y 50 para C. Se aprueba con 70 puntos (7/10).";
+      if ($("gradeMessage")) {
+        $("gradeMessage").textContent = "Nuevo intento habilitado. Ingresá nuevamente tus datos y comenzá la evaluación.";
+        $("gradeMessage").className = "grade-message";
+      }
+      if ($("teacherReview")) $("teacherReview").innerHTML = "";
+      if ($("teacherReviewBtn")) $("teacherReviewBtn").hidden = true;
+      if ($("gradeBtn")) {
+        $("gradeBtn").disabled = false;
+        $("gradeBtn").textContent = "Finalizar y corregir";
+      }
+      if (button) {
+        button.disabled = false;
+        button.textContent = "Eliminar datos guardados y habilitar nuevo intento";
+      }
+      updateProgress();
+      if (status) status.textContent =
+        "Datos eliminados. Ya podés ingresar nuevamente nombre, apellido y curso y realizar otro examen.";
+      $("studentName")?.focus();
     } catch (error) {
-      if (status) status.textContent = error.message;
+      console.error("No se pudieron eliminar los datos del examen:", error);
+      if (status) status.textContent =
+        "El navegador no permitió borrar los datos. Revisá que no esté bloqueado el almacenamiento del sitio.";
+      if (button) button.disabled = false;
     }
   }
 
@@ -696,6 +822,17 @@
       if (!attempt || !attempt.answers || typeof attempt.answers !== "object") {
         throw new Error("Registro de intento inválido");
       }
+      // Si el intento proviene de la escala anterior (90 puntos), se conserva
+      // la entrega pero se elimina la nota vieja para que el docente la recalcule sobre 100.
+      if (Number(attempt.version || 0) < 5) {
+        delete attempt.teacherScore;
+        delete attempt.teacherGradeOutOfTen;
+        delete attempt.teacherGradedAt;
+        attempt.version = 5;
+        try { localStorage.setItem(EXAM_KEY, JSON.stringify(attempt)); } catch (error) {
+          console.warn("No se pudo actualizar la versión de la evaluación:", error);
+        }
+      }
       answers = attempt.answers;
       if (attempt.student) {
         if ($("studentName")) $("studentName").value = attempt.student.name || "";
@@ -761,6 +898,7 @@
     updateProgress();
 
     if ($("gradeBtn")) $("gradeBtn").addEventListener("click", grade);
+    if ($("teacherReviewBtn")) $("teacherReviewBtn").addEventListener("click", openTeacherReview);
     ["studentName", "studentLastName", "studentCourse"].forEach(id => {
       if ($(id)) $(id).addEventListener("input", saveDraft);
     });
@@ -776,9 +914,9 @@
     if (!restoreAttempt()) {
       restoreDraft();
       examLocked = false;
-      if ($("score")) $("score").innerHTML = `—<small> / ${totalQuestions + 50}</small>`;
-      if ($("scoreText")) $("scoreText").textContent = `Respondé las 40 preguntas y completá los 5 ejercicios. La nota final es sobre 90 puntos. Se aprueba con el 70% (nota 7/10).`;
-      if ($("gradeMessage")) $("gradeMessage").textContent = "Completá tus datos personales. Al finalizar, el servicio de IA corregirá los cinco ejercicios de código.";
+      if ($("score")) $("score").innerHTML = `—<small> / 100</small>`;
+      if ($("scoreText")) $("scoreText").textContent = `Respondé las 40 preguntas y completá los 5 ejercicios. El docente asignará la nota sobre 100 puntos: 50 para A y B, y 50 para C. Se aprueba con 70 puntos (7/10).`;
+      if ($("gradeMessage")) $("gradeMessage").textContent = "Completá tus datos personales. Al entregar, el docente podrá consultar la clave y evaluar tus respuestas.";
     }
   }
 

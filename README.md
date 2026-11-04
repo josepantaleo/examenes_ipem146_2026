@@ -1,6 +1,6 @@
 # Coloquio modelo de JavaScript — IPEM 146
 
-Aplicación web de práctica con 20 preguntas teóricas, 20 preguntas de interpretación y 5 ejercicios de corrección de código asistidos por IA.
+Aplicación web de práctica con 20 preguntas teóricas, 20 preguntas de interpretación y 5 ejercicios de corrección de código. **No utiliza inteligencia artificial.** El docente consulta la clave de respuestas y asigna manualmente la calificación de los ejercicios escritos.
 
 > **Importante:** es un modelo de práctica, no el examen real.
 
@@ -8,85 +8,64 @@ Aplicación web de práctica con 20 preguntas teóricas, 20 preguntas de interpr
 
 - Identificación del estudiante: nombre, apellido y curso.
 - Guardado automático del avance en el navegador.
-- Corrección automática de las 40 preguntas de opción múltiple.
-- Corrección asistida por IA de 5 ejercicios escritos, hasta 10 puntos cada uno.
-- Puntaje máximo: 90 puntos.
-- Aprobación: 70 % (equivale a 7/10).
-- Botón docente para borrar el intento y el borrador guardados en el navegador actual.
-
-## Requisitos
-
-- Node.js 20 o superior.
-- Una clave de API de OpenAI habilitada para el modelo configurado.
+- Al pulsar **Finalizar y corregir**, el estudiante ve un resumen de las 40 preguntas: correctas en verde, incorrectas en rojo y sin responder en gris; en las incorrectas se indica la opción correcta.
+- Acceso docente protegido por contraseña para consultar las respuestas correctas y las respuestas entregadas.
+- Cinco respuestas modelo orientativas para los ejercicios de código; se aceptan soluciones equivalentes.
+- Calificación manual de cada ejercicio de código (0 a 10 puntos).
+- Puntaje máximo: 100 puntos; partes A y B: 50 puntos (1,25 por respuesta correcta); parte C: 50 puntos (10 por ejercicio). Aprobación: 70 puntos (equivale a 7/10).
+- Botón docente para eliminar el intento y el borrador guardados en este navegador.
 
 ## Ejecutar localmente
 
-1. Descargá o cloná este repositorio.
+1. Instalá Node.js 20 o superior.
 2. Abrí una terminal dentro de la carpeta del proyecto.
-3. Instalá las dependencias:
+3. Ejecutá `npm install`.
+4. Copiá `.env.example` como `.env` y configurá `TEACHER_DELETE_PASSWORD` con una contraseña segura.
+5. Ejecutá `npm start`.
+6. Abrí http://localhost:3000.
 
-   ```bash
-   npm install
-   ```
+Para revisar la sintaxis: `npm run check`.
 
-4. Copiá `.env.example` con el nombre `.env`.
-5. Editá `.env` y completá:
-   - `OPENAI_API_KEY`: clave privada de API.
-   - `OPENAI_MODEL`: identificador de modelo disponible en tu cuenta.
-   - `TEACHER_DELETE_PASSWORD`: contraseña docente nueva y segura.
-   - `PORT`: puerto local (por defecto 3000).
+## Evaluación docente
+El botón **“Eliminar datos guardados y habilitar nuevo intento”** solicita confirmación y contraseña docente. Si la autorización es válida, elimina el intento y los borradores de versiones anteriores de este examen guardados en ese navegador y recarga la página. Esto permite volver a comenzar en ese mismo dispositivo. No elimina registros de otros navegadores ni crea un registro central.
 
-6. Iniciá la aplicación:
+**Importante:** la validación de la contraseña se realiza en `server.js`. Por eso esta función requiere que el proyecto esté publicado en un alojamiento que ejecute Node.js y tenga configurada la variable `TEACHER_DELETE_PASSWORD`. En GitHub Pages, que solo sirve archivos estáticos, la ruta `/api/teacher/authorize-delete` no existe y el botón no puede autorizar el borrado.
 
-   ```bash
-   npm start
-   ```
 
-7. Abrí [http://localhost:3000](http://localhost:3000).
+1. El estudiante completa sus datos, responde y pulsa **Finalizar y corregir** (el botón registra la entrega; no corrige).
+2. El docente pulsa **Abrir evaluación docente** e ingresa la contraseña configurada en el servidor.
+3. Se muestra la clave de las 40 preguntas, la respuesta seleccionada por el estudiante y las soluciones modelo de los cinco ejercicios.
+4. El docente asigna entre 0 y 10 puntos a cada ejercicio y pulsa **Guardar calificación docente**.
+5. El sistema calcula el resultado sobre 100 puntos: 50 de las partes A y B (1,25 por respuesta correcta) y 50 de código. Se aprueba con 70 puntos (7/10).
 
-Para revisar la sintaxis de JavaScript:
-
-```bash
-npm run check
-```
+Las soluciones de código son orientativas; el docente debe aceptar otras soluciones válidas que cumplan la consigna.
 
 ## Publicar en GitHub
 
-1. Creá un repositorio nuevo en GitHub.
-2. Subí `index.html`, `styles.css`, `app.js`, `server.js`, `package.json`, `package-lock.json` (si existe), `.env.example`, `.gitignore` y este README.
-3. **No subas `.env`, claves API ni contraseñas.**
-4. Configurá los secretos y variables de entorno en el servicio donde alojes la aplicación.
+Subí `index.html`, `styles.css`, `app.js`, `server.js`, `package.json`, `.env.example`, `.gitignore` y este README. **Nunca subas `.env`, contraseñas ni secretos.**
 
-## Importante: GitHub Pages no alcanza
+GitHub Pages solo aloja archivos estáticos y no ejecuta `server.js`. Para que funcionen la autorización docente y el borrado protegido, desplegá la aplicación en un servicio que ejecute Node.js.
 
-Esta aplicación necesita `server.js` para comunicarse con OpenAI y validar la contraseña docente. GitHub Pages solo publica archivos estáticos: **no ejecuta Node.js**. Por eso, para que la corrección con IA funcione en Internet, desplegá el proyecto en un hosting que ejecute Node.js y configurá allí las variables de entorno.
+## Almacenamiento y límites
 
-Si se publica únicamente en GitHub Pages, la página podrá cargar, pero `/api/grade-code` y `/api/teacher/authorize-delete` no estarán disponibles.
+Los borradores, entregas y calificaciones se guardan en `localStorage` del navegador y dispositivo utilizados. No existe una base de datos central ni un panel que reúna automáticamente las entregas de todos los estudiantes. Para una evaluación institucional con consulta desde distintos dispositivos se necesita agregar autenticación y almacenamiento en servidor o Firebase/Firestore.
 
-## Almacenamiento y privacidad
-
-El avance y el intento final se guardan en `localStorage` del navegador y dispositivo utilizados. No hay base de datos central ni panel para consultar los resultados de todos los estudiantes. Borrar los datos del navegador, usar otro dispositivo o abrir una ventana privada puede evitar la restricción de intento único. Para un control real por estudiante se necesita autenticación y almacenamiento en servidor o Firebase/Firestore.
-
-El servidor recibe nombre, apellido, curso y respuestas de código para solicitar la corrección. Informá a los estudiantes sobre este tratamiento antes de usar la aplicación.
-
-## Seguridad y límites
-
-- La clave de OpenAI y la contraseña docente deben permanecer en variables de entorno del servidor.
-- El botón docente borra solamente el intento y borrador del navegador actual; no elimina registros de otros dispositivos.
-- El bloqueo de copiar, cortar y pegar es una barrera de interfaz, no una protección infalible.
-- La IA puede equivocarse. El docente debe revisar especialmente respuestas alternativas y notas cercanas al 70 %.
-- Configurá límites y monitoreo en el proveedor de hosting para controlar el consumo de la API.
+El bloqueo de copiar, cortar y pegar es una barrera de interfaz, no una protección infalible.
 
 ## Estructura
 
 ```text
-.
-├── index.html
-├── styles.css
-├── app.js
-├── server.js
-├── package.json
-├── .env.example
-├── .gitignore
-└── README.md
+index.html
+styles.css
+app.js
+server.js
+package.json
+.env.example
+.gitignore
+README.md
 ```
+
+
+### Habilitar un nuevo intento
+
+El botón **Eliminar datos guardados y habilitar nuevo intento** solicita confirmación y borra el intento y el borrador almacenados en el navegador actual. Luego habilita los campos para volver a ingresar los datos del estudiante y responder el examen. Este reinicio es local: no borra registros guardados en otros dispositivos o sistemas externos.

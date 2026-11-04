@@ -29,7 +29,7 @@
     <section class="intro panel">
       <div>
         <h2>Prepará tu evaluación</h2>
-        <p>La evaluación tiene 45 actividades: 20 teóricas, 20 de interpretación y 5 ejercicios de corrección de código. Las partes A y B suman 40 puntos; la parte C se corrige con IA y suma hasta 50 puntos.</p>
+        <p>La evaluación tiene 45 actividades: 20 teóricas, 20 de interpretación y 5 ejercicios de corrección de código. Las partes A y B suman 50 puntos (1,25 puntos por respuesta correcta) y la parte C suma hasta 50 puntos (10 por cada ejercicio de código). El docente revisará las respuestas y asignará la calificación.</p>
       </div>
       <div class="progress-wrap">
         <div class="progress-label"><span>Progreso</span><strong id="progressText">0 de 45</strong></div>
@@ -74,7 +74,7 @@ console.log("Cantidad de productos:", productos.length);</code></pre>
       <div class="section-heading">
         <span class="eyebrow">PARTE C · 5 EJERCICIOS</span>
         <h2>Corrección de código</h2>
-        <p>Detectá los errores y escribí el código corregido. No se permite copiar, cortar, pegar ni arrastrar texto en los editores. La IA corregirá cada ejercicio sobre 10 puntos; esta parte aporta hasta 50 puntos al resultado final.</p>
+        <p>Detectá los errores y escribí el código corregido. No se permite copiar, cortar, pegar ni arrastrar texto en los editores. El docente revisará cada ejercicio y asignará hasta 10 puntos; esta parte aporta hasta 50 puntos al resultado final. La evaluación completa suma 100 puntos.</p>
       </div>
 
       <article class="exercise panel">
@@ -144,19 +144,21 @@ try {
     </section>
 
     <section class="finish panel">
-      <div><span class="eyebrow">RESULTADO</span><h2>Tu evaluación</h2><p id="scoreText">La calificación total es sobre 90 puntos: 40 de las preguntas A y B y 50 de los ejercicios C corregidos con IA. Se aprueba con el 70 % (nota 7/10).</p></div>
-      <div class="score" id="score">—<small> / 90</small></div>
+      <div><span class="eyebrow">RESULTADO</span><h2>Tu evaluación</h2><p id="scoreText">La calificación total es sobre 100 puntos: 50 de las partes A y B y 50 de la parte C. El docente revisará las respuestas y asignará la nota. Se aprueba con 70 puntos (7/10).</p></div>
+      <div class="score" id="score">—<small> / 100</small></div>
       <div class="finish-actions">
         <button id="gradeBtn" class="primary" type="button">Finalizar y corregir</button>
         <button id="resetBtn" class="secondary" type="button" hidden>Reiniciar</button>
+        <button id="teacherReviewBtn" class="secondary" type="button" hidden>Abrir evaluación docente</button>
       </div>
       <p id="gradeMessage" class="grade-message" aria-live="polite"></p>
-      <div id="aiFeedback" class="ai-feedback" aria-live="polite"></div>
+      <div id="studentSummary" class="student-summary" aria-live="polite"></div>
+      <div id="teacherReview" class="ai-feedback" aria-live="polite"></div>
     </section>
 
     <section class="teacher-tools panel">
-      <div><h2>Administración docente</h2><p>Elimina el intento finalizado y el avance guardado en este navegador. Requiere autorización docente.</p></div>
-      <button id="deleteSavedBtn" class="danger" type="button">Eliminar datos guardados del examen</button>
+      <div><h2>Administración docente</h2><p>Elimina el intento y el borrador guardados en este navegador. Al confirmar, el formulario se limpia y permite ingresar nuevamente nombre, apellido, curso y todas las respuestas. Este reinicio borra únicamente los datos locales de este navegador.</p></div>
+      <button id="deleteSavedBtn" class="danger" type="button">Eliminar datos guardados y habilitar nuevo intento</button>
       <p id="deleteStatus" class="delete-status" aria-live="polite"></p>
     </section>
 
