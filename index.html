@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Coloquio modelo interactivo de Programación Web - IPEM 146">
+  <meta name="description" content="Coloquio modelo interactivo de JavaScript - IPEM 146">
   <title>Coloquio Modelo | IPEM 146</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
   <header class="hero">
     <div class="brand">I.P.E.M. Nº 146 · Formación Profesional</div>
-    <h1>Examen modelo como guia para Coloquio u Examenes</h1>
+    <h1>Coloquio modelo de JavaScript</h1>
     <div class="aviso-examen">
   <h2>⚠️ NO ES EL COLOQUIO O EXAMEN REAL</h2>
   <p>SINO UN MODELO DE EVALUACIÓN PARA PRACTICAR</p>
@@ -18,13 +18,21 @@
   </header>
 
   <main class="container">
+    <section class="student-data panel" aria-labelledby="studentTitle">
+      <div><span class="eyebrow">IDENTIFICACIÓN</span><h2 id="studentTitle">Datos del estudiante</h2><p>Completá tus datos antes de finalizar la evaluación.</p></div>
+      <div class="student-fields">
+        <label>Nombre<input id="studentName" name="studentName" type="text" maxlength="60" autocomplete="given-name" required></label>
+        <label>Apellido<input id="studentLastName" name="studentLastName" type="text" maxlength="60" autocomplete="family-name" required></label>
+        <label>Curso<input id="studentCourse" name="studentCourse" type="text" maxlength="30" placeholder="Ej.: 5° A - Informática" required></label>
+      </div>
+    </section>
     <section class="intro panel">
       <div>
         <h2>Prepará tu evaluación</h2>
-        <p>Respondé las preguntas, revisá tus respuestas y consultá las soluciones de práctica.</p>
+        <p>Completá las 20 preguntas teóricas, las 20 de interpretación y los 5 ejercicios de corrección de código. La parte C se responde escribiendo, sin pegar código.</p>
       </div>
       <div class="progress-wrap">
-        <div class="progress-label"><span>Progreso</span><strong id="progressText">0 de 18</strong></div>
+        <div class="progress-label"><span>Progreso</span><strong id="progressText">0 de 45</strong></div>
         <div class="progress"><div id="progressBar"></div></div>
       </div>
     </section>
@@ -36,12 +44,12 @@
     </nav>
 
     <section id="teoria" class="section active">
-      <div class="section-heading"><span class="eyebrow">PARTE A</span><h2>Conocimientos teóricos</h2><p>Seleccioná una respuesta para cada pregunta.</p></div>
+      <div class="section-heading"><span class="eyebrow">PARTE A · 20 PREGUNTAS</span><h2>Conocimientos teóricos</h2><p>Seleccioná una sola respuesta por pregunta.</p></div>
       <div id="theoryQuestions"></div>
     </section>
 
     <section id="interpretacion" class="section">
-      <div class="section-heading"><span class="eyebrow">PARTE B</span><h2>Interpretación de código</h2><p>Analizá el programa y elegí la respuesta correcta.</p></div>
+      <div class="section-heading"><span class="eyebrow">PARTE B · 20 PREGUNTAS</span><h2>Interpretación de código</h2><p>Analizá cada fragmento y elegí la respuesta correcta.</p></div>
       <div class="code-card">
         <div class="code-title">Programa de productos</div>
         <pre><code>const productos = [
@@ -63,73 +71,96 @@ console.log("Cantidad de productos:", productos.length);</code></pre>
     </section>
 
     <section id="errores" class="section">
-      <div class="section-heading"><span class="eyebrow">PARTE C</span><h2>Corrección de código</h2><p>Leé el problema, escribí tu propuesta y luego comparala con la solución del modelo.</p></div>
+      <div class="section-heading">
+        <span class="eyebrow">PARTE C · 5 EJERCICIOS</span>
+        <h2>Corrección de código</h2>
+        <p>Detectá los errores y escribí el código corregido. No se permite copiar, cortar, pegar ni arrastrar texto en los editores. Esta parte queda guardada para corrección docente y no modifica la nota automática de las 40 preguntas.</p>
+      </div>
+
       <article class="exercise panel">
-        <h3>Ejercicio 1 · Conversión de datos y operadores</h3>
-        <p class="muted">El código tiene errores de tipo y de comparación. ¿Cómo lo corregirías?</p>
+        <h3>Ejercicio 1 · Variables, conversión y operadores</h3>
+        <p class="muted">El programa debe calcular el total de 3 productos de $1500 y comprobar si el total es $4500. Corregí los errores.</p>
         <pre><code>const precio = "1500";
 const cantidad = 3;
 const total = precio + cantidad;
 
-if (total = 4503) {
+if (total = 4500) {
   console.log("Total correcto");
-} else {
-  console.log("Revisar total");
 }</code></pre>
-        <textarea id="answer1" rows="5" placeholder="Escribí aquí tu código corregido..."></textarea>
-        <button class="solution-btn" data-solution="solution1">Ver solución del modelo</button>
-        <div id="solution1" class="solution hidden">
-          <pre><code>const precio = "1500";
-const cantidad = 3;
-const total = Number(precio) * cantidad;
-
-if (total === 4500) {
-  console.log("Total correcto");
-} else {
-  console.log("Revisar total");
-}</code></pre>
-          <p><strong>Explicación:</strong> Number() convierte el texto en número; se multiplica precio por cantidad; === compara sin conversión y evita asignar un valor dentro del if.</p>
-          <p class="result">Resultado: Total correcto. El total es 4500.</p>
-        </div>
+        <textarea id="answer1" class="code-answer" rows="7" spellcheck="false" autocomplete="off" autocapitalize="off" placeholder="Escribí aquí el código corregido..."></textarea>
       </article>
 
       <article class="exercise panel">
         <h3>Ejercicio 2 · Funciones y parámetros</h3>
-        <p class="muted">La función debe calcular un descuento expresado en porcentaje.</p>
+        <p class="muted">La función debe aplicar un descuento del 20% a un precio de $10000. Corregí el cálculo.</p>
         <pre><code>function calcularDescuento(precio, porcentaje) {
   const descuento = precio * porcentaje;
   return precio - descuento;
 }
 
-const final = calcularDescuento(10000, 20);
-console.log("Precio final:", final);</code></pre>
-        <textarea id="answer2" rows="5" placeholder="Escribí aquí tu función corregida..."></textarea>
-        <button class="solution-btn" data-solution="solution2">Ver solución del modelo</button>
-        <div id="solution2" class="solution hidden">
-          <pre><code>function calcularDescuento(precio, porcentaje) {
-  const descuento = precio * (porcentaje / 100);
-  return precio - descuento;
-}
+console.log(calcularDescuento(10000, 20));</code></pre>
+        <textarea id="answer2" class="code-answer" rows="7" spellcheck="false" autocomplete="off" autocapitalize="off" placeholder="Escribí aquí la función corregida..."></textarea>
+      </article>
 
-const final = calcularDescuento(10000, 20);
-console.log("Precio final:", final);</code></pre>
-          <p><strong>Explicación:</strong> El porcentaje debe dividirse por 100 para convertirlo en proporción.</p>
-          <p class="result">Resultado: Precio final: 8000.</p>
-        </div>
+      <article class="exercise panel">
+        <h3>Ejercicio 3 · Arrays y recorridos</h3>
+        <p class="muted">El objetivo es recorrer las notas y mostrar solamente las que son iguales o mayores que 6. Corregí el código.</p>
+        <pre><code>const notas = [4, 8, 6, 3, 10];
+
+for (let i = 0; i <= notas.length; i++) {
+  if (notas[i] > 6) {
+    console.log(notas);
+  }
+}</code></pre>
+        <textarea id="answer3" class="code-answer" rows="7" spellcheck="false" autocomplete="off" autocapitalize="off" placeholder="Escribí aquí el código corregido..."></textarea>
+      </article>
+
+      <article class="exercise panel">
+        <h3>Ejercicio 4 · Objetos y propiedades</h3>
+        <p class="muted">El programa debe mostrar el nombre y la nota del alumno. Corregí los errores.</p>
+        <pre><code>const alumno = {
+  nombre: "Lucía",
+  nota: 9
+};
+
+console.log(alumno.nombre);
+console.log(alumno.notas);</code></pre>
+        <textarea id="answer4" class="code-answer" rows="7" spellcheck="false" autocomplete="off" autocapitalize="off" placeholder="Escribí aquí el código corregido..."></textarea>
+      </article>
+
+      <article class="exercise panel">
+        <h3>Ejercicio 5 · JSON y manejo de errores</h3>
+        <p class="muted">La respuesta recibida contiene un JSON válido. Convertí el texto en objeto y mostrá la temperatura. Corregí el código.</p>
+        <pre><code>const respuesta = '{"ubicacion":"IPEM 146","temperatura":21}';
+
+try {
+  const datos = JSON.stringify(respuesta);
+  console.log(datos.temperatura);
+} catch (error) {
+  console.log(error.menssage);
+}</code></pre>
+        <textarea id="answer5" class="code-answer" rows="7" spellcheck="false" autocomplete="off" autocapitalize="off" placeholder="Escribí aquí el código corregido..."></textarea>
       </article>
     </section>
 
     <section class="finish panel">
-      <div><span class="eyebrow">RESULTADO</span><h2>Tu evaluación</h2><p id="scoreText">Respondé las preguntas de las partes A y B para calcular tu resultado.</p></div>
-      <div class="score" id="score">—<small>/ 16</small></div>
+      <div><span class="eyebrow">RESULTADO</span><h2>Tu evaluación</h2><p id="scoreText">La nota automática se calcula sobre las 40 preguntas de las partes A y B. Los 5 ejercicios de la parte C quedan para corrección docente.</p></div>
+      <div class="score" id="score">—<small> / 40</small></div>
       <div class="finish-actions">
-        <button id="gradeBtn" class="primary">Corregir evaluación</button>
-        <button id="resetBtn" class="secondary">Reiniciar</button>
+        <button id="gradeBtn" class="primary" type="button">Finalizar y corregir</button>
+        <button id="resetBtn" class="secondary" type="button" hidden>Reiniciar</button>
       </div>
       <p id="gradeMessage" class="grade-message" aria-live="polite"></p>
+      <div id="aiFeedback" class="ai-feedback" aria-live="polite"></div>
     </section>
 
-    <footer>Material basado en el “Coloquio modelo – Respuestas y códigos resueltos” · IPEM 146</footer>
+    <section class="teacher-tools panel">
+      <div><h2>Administración docente</h2><p>Elimina el intento guardado en este navegador. Requiere autorización docente.</p></div>
+      <button id="deleteSavedBtn" class="danger" type="button">Eliminar datos guardados del examen</button>
+      <p id="deleteStatus" class="delete-status" aria-live="polite"></p>
+    </section>
+
+    <footer>Material de evaluación modelo · Formación Profesional en Diseño Web · IPEM 146</footer>
   </main>
   <script src="app.js"></script>
 </body>
