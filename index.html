@@ -41,7 +41,6 @@
       <button class="tab active" data-target="teoria">A · Teórico</button>
       <button class="tab" data-target="interpretacion">B · Interpretación</button>
       <button class="tab" data-target="errores">C · Corrección de código</button>
-      <button id="gradeBtn" class="tab grade-action" type="button">Finalizar y corregir</button>
     </nav>
 
     <section id="teoria" class="section active">
@@ -143,6 +142,14 @@ try {
         <textarea id="answer5" class="code-answer" rows="7" spellcheck="false" autocomplete="off" autocapitalize="off" placeholder="Escribí aquí el código corregido..."></textarea>
       </article>
     </section>
+
+    <div class="finalize-exam panel">
+      <div>
+        <h2>¿Terminaste de responder?</h2>
+        <p>Cuando estés listo, finalizá la evaluación para corregir las respuestas y ver tu resultado.</p>
+      </div>
+      <button id="gradeBtn" class="primary finalize-button" type="button">Finalizar y corregir</button>
+    </div>
 
     <section class="finish panel">
       <div><span class="eyebrow">RESULTADO</span><h2>Tu evaluación</h2><p id="scoreText">La evaluación suma 10 puntos: teoría 2, interpretación 4 y código 4. Se aprueba con 7/10 (70%).</p></div>

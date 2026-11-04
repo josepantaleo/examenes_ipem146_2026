@@ -10,6 +10,13 @@ button,input,textarea{font:inherit}button:focus-visible,input:focus-visible,text
 .progress{height:10px;background:#e9eef6;border-radius:99px;overflow:hidden}.progress div{height:100%;width:0;background:linear-gradient(90deg,var(--blue),var(--cyan));transition:width .25s}
 .tabs{display:flex;gap:9px;margin:25px 0 22px;flex-wrap:wrap}.tab{border:1px solid var(--line);background:#fff;color:#526078;padding:12px 18px;border-radius:11px;font-weight:700;cursor:pointer}.tab:hover{border-color:#9bbcf4;background:#f8fbff}.tab.active{background:var(--navy);border-color:var(--navy);color:#fff}
 .tab.grade-action{margin-left:auto;background:var(--blue);border-color:var(--blue);color:#fff}.tab.grade-action:hover{background:#1d4ed8;border-color:#1d4ed8}.tab.grade-action:disabled{opacity:.55;cursor:not-allowed;transform:none}
+
+.finalize-exam{margin:28px 0 0;padding:20px 22px;display:flex;align-items:center;justify-content:space-between;gap:18px;border:1px solid var(--line);background:#fff}
+.finalize-exam h2{margin:0 0 5px;font:600 1.15rem 'Space Grotesk'}
+.finalize-exam p{margin:0;color:var(--muted);font-size:.92rem}
+.finalize-button{flex:0 0 auto;min-height:46px;padding:12px 22px;border:0;border-radius:11px;font-weight:800;cursor:pointer}
+.finalize-button:hover{filter:brightness(.95)}
+.finalize-button:disabled{opacity:.55;cursor:not-allowed}
 .section{display:none}.section.active{display:block}.section-heading{margin:25px 0 17px}.eyebrow{font-size:.72rem;letter-spacing:.13em;font-weight:700;color:var(--blue)}.section-heading h2{font:600 1.75rem 'Space Grotesk';margin:4px 0}.section-heading p,.muted{color:var(--muted);margin:0}
 .question{padding:21px 23px;margin:13px 0}.question h3{font-size:1rem;line-height:1.55;margin:0 0 13px}.q-number{color:var(--blue);font-weight:700;margin-right:7px}.question-code{white-space:pre;overflow-x:auto;background:#101c2d;color:#dbeafe;border-radius:10px;padding:14px 16px;margin:12px 0 15px;font:.86rem/1.65 Consolas,monospace}
 .options{display:grid;gap:9px}.option{display:flex;align-items:flex-start;gap:11px;padding:11px 13px;border:1px solid var(--line);border-radius:10px;cursor:pointer;font-size:.94rem}.option:hover{border-color:#91b8fa;background:#f8fbff}.option input{margin-top:5px;accent-color:var(--blue);flex:0 0 auto}.option.correct{border-color:#86d4a0;background:#effaf2}.option.incorrect{border-color:#f0a6a0;background:#fff4f2}
@@ -85,6 +92,7 @@ footer{text-align:center;color:#8490a3;font-size:.8rem;padding:28px 8px}
 .report-score{padding:13px;background:#f0f7ff;border-radius:9px;font-weight:800;font-size:1.1rem;margin:12px 0}
 .individual-report button{margin-top:12px}
 @media(max-width:680px){.teacher-dashboard{padding:16px}.dashboard-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.dashboard-filters{grid-template-columns:1fr}.analytics-row{grid-template-columns:34px minmax(60px,1fr) 90px;gap:7px;font-size:.75rem}.dashboard-actions{width:100%}.dashboard-actions button{flex:1}}
+@media(max-width:680px){.finalize-exam{align-items:stretch;flex-direction:column;padding:18px}.finalize-button{width:100%}}
 @media print{.hero,.student-data,.intro,.tabs,.section,.finish-actions,.teacher-tools,.dashboard-actions,.dashboard-filters,.password-dialog{display:none!important}.teacher-dashboard{border:0;box-shadow:none;margin:0;padding:0}.results-table{font-size:10px}}
 .teacher-tool-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:12px}.teacher-tool-actions button{margin:0}
 .report-actions{display:flex;gap:9px;flex-wrap:wrap}.report-actions button{margin:0}
