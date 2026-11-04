@@ -82,11 +82,14 @@ app.post("/api/grade-code", async (req, res) => {
     const parsed = JSON.parse(response.output_text);
     if (!Array.isArray(parsed.results) || parsed.results.length !== 5) throw new Error("Respuesta de corrección incompleta.");
     const ids = new Set(exercises.map(ex => ex.id));
+    const returnedIds = new Set();
     for (const item of parsed.results) {
-      if (!ids.has(item.id) || !Number.isInteger(item.score) || item.score < 0 || item.score > 10) {
-        throw new Error("La IA devolvió una calificación inválida.");
+      if (!ids.has(item.id) || returnedIds.has(item.id) || !Number.isInteger(item.score) || item.score < 0 || item.score > 10) {
+        throw new Error("La IA devolvió una calificación inválida o duplicada.");
       }
+      returnedIds.add(item.id);
     }
+    if (returnedIds.size !== exercises.length) throw new Error("La IA no corrigió todos los ejercicios.");
     parsed.results.sort((a, b) => exercises.findIndex(ex => ex.id === a.id) - exercises.findIndex(ex => ex.id === b.id));
     res.json(parsed);
   } catch (error) {

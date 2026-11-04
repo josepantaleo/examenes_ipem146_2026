@@ -19,7 +19,8 @@
 
   // Cambiar la versión de la clave cuando el docente publique un examen nuevo.
   const EXAM_KEY = "ipem146_js_examen_intento_unico_v3";
-  const PASS_PERCENT = 60;
+  const DRAFT_KEY = `${EXAM_KEY}_borrador`;
+  const PASS_PERCENT = 70;
 
   const theory = [
     {
@@ -404,6 +405,7 @@
         }
         answers[input.name] = Number(input.value);
         updateProgress();
+        saveDraft();
         const message = $("gradeMessage");
         if (message) message.textContent = "";
       });
@@ -425,6 +427,7 @@
       field.addEventListener("input", () => {
         codeAnswers[field.id] = field.value;
         updateProgress();
+        saveDraft();
       });
 
       // Impide las acciones habituales de portapapeles dentro de los editores.
@@ -487,13 +490,15 @@
     const aiScore = aiResults.reduce((sum, item) => sum + (Number(item.score) || 0), 0);
     const finalScore = score + aiScore;
     const maxScore = totalQuestions + 50;
-    const percent = Math.round(finalScore / maxScore * 100);
+    const percent = finalScore / maxScore * 100;
+    const displayedPercent = percent.toFixed(1).replace(".", ",");
+    const gradeOutOfTen = (percent / 10).toFixed(1).replace(".", ",");
 
     if ($("score")) $("score").innerHTML = `${finalScore}<small> / ${maxScore}</small>`;
     if ($("scoreText")) {
       const student = attempt.student || {};
       const identity = [student.name, student.lastName, student.course].filter(Boolean).join(" · ");
-      $("scoreText").textContent = `${identity ? identity + " | " : ""}Resultado: ${percent}%. Parte A y B: ${score}/40. Parte C corregida por IA: ${aiScore}/50.`;
+      $("scoreText").textContent = `${identity ? identity + " | " : ""}Resultado: ${displayedPercent}% | Nota: ${gradeOutOfTen}/10. Parte A y B: ${score}/40. Parte C corregida por IA: ${aiScore}/50.`;
     }
     if ($("gradeMessage")) {
       $("gradeMessage").textContent = percent >= PASS_PERCENT
@@ -571,10 +576,11 @@
       const attempt = {
         student, answers: { ...answers }, codeAnswers: codeAnswersNow, score, total: totalQuestions,
         aiCorrection: aiData.results, aiScore: aiData.results.reduce((sum, item) => sum + Number(item.score || 0), 0),
-        percentage: Math.round((score + aiData.results.reduce((sum, item) => sum + Number(item.score || 0), 0)) / (totalQuestions + 50) * 100),
+        percentage: Number(((score + aiData.results.reduce((sum, item) => sum + Number(item.score || 0), 0)) / (totalQuestions + 50) * 100).toFixed(2)),
         date: new Date().toISOString(), version: 3
       };
       localStorage.setItem(EXAM_KEY, JSON.stringify(attempt));
+      localStorage.removeItem(DRAFT_KEY);
       showCorrection(attempt.answers, attempt.score, attempt.date, attempt);
     } catch (error) {
       console.error("Error al corregir con IA:", error);
@@ -611,10 +617,58 @@
       });
       if (!response.ok) throw new Error("Contraseña incorrecta o servicio docente no disponible.");
       localStorage.removeItem(EXAM_KEY);
+      localStorage.removeItem(DRAFT_KEY);
       if (status) status.textContent = "Datos del examen eliminados de este navegador. La página se actualizará.";
       window.setTimeout(() => window.location.reload(), 700);
     } catch (error) {
       if (status) status.textContent = error.message;
+    }
+  }
+
+  function saveDraft() {
+    if (examLocked) return;
+    const student = {
+      name: $("studentName")?.value.trim() || "",
+      lastName: $("studentLastName")?.value.trim() || "",
+      course: $("studentCourse")?.value.trim() || ""
+    };
+    try {
+      localStorage.setItem(DRAFT_KEY, JSON.stringify({
+        student,
+        answers: { ...answers },
+        codeAnswers: Object.fromEntries(Array.from(document.querySelectorAll(".code-answer"), field => [field.id, field.value])),
+        updatedAt: new Date().toISOString()
+      }));
+    } catch (error) {
+      console.warn("No se pudo guardar el avance local:", error);
+    }
+  }
+
+  function restoreDraft() {
+    try {
+      const raw = localStorage.getItem(DRAFT_KEY);
+      if (!raw) return false;
+      const draft = JSON.parse(raw);
+      if (!draft || typeof draft !== "object") return false;
+      const student = draft.student || {};
+      if ($("studentName")) $("studentName").value = student.name || "";
+      if ($("studentLastName")) $("studentLastName").value = student.lastName || "";
+      if ($("studentCourse")) $("studentCourse").value = student.course || "";
+      answers = draft.answers && typeof draft.answers === "object" ? draft.answers : {};
+      Object.entries(answers).forEach(([id, selected]) => {
+        const option = document.querySelector(`input[name="${id}"][value="${selected}"]`);
+        if (option) option.checked = true;
+      });
+      codeAnswers = draft.codeAnswers && typeof draft.codeAnswers === "object" ? draft.codeAnswers : {};
+      document.querySelectorAll(".code-answer").forEach(field => {
+        field.value = typeof codeAnswers[field.id] === "string" ? codeAnswers[field.id] : "";
+      });
+      updateProgress();
+      if ($("gradeMessage")) $("gradeMessage").textContent = "Se recuperó tu avance guardado en este dispositivo. Podés continuar.";
+      return true;
+    } catch (error) {
+      console.warn("No se pudo recuperar el borrador:", error);
+      return false;
     }
   }
 
@@ -700,6 +754,9 @@
     updateProgress();
 
     if ($("gradeBtn")) $("gradeBtn").addEventListener("click", grade);
+    ["studentName", "studentLastName", "studentCourse"].forEach(id => {
+      if ($(id)) $(id).addEventListener("input", saveDraft);
+    });
     if ($("deleteSavedBtn")) $("deleteSavedBtn").addEventListener("click", deleteSavedAttempt);
 
     // No existe reinicio para el estudiante. El docente debe publicar una nueva versión.
@@ -710,9 +767,10 @@
     }
 
     if (!restoreAttempt()) {
+      restoreDraft();
       examLocked = false;
-      if ($("score")) $("score").innerHTML = `—<small> / ${totalQuestions}</small>`;
-      if ($("scoreText")) $("scoreText").textContent = `Respondé las 40 preguntas y completá los 5 ejercicios. La IA corregirá la parte C y calculará el resultado total sobre 90 puntos.`;
+      if ($("score")) $("score").innerHTML = `—<small> / ${totalQuestions + 50}</small>`;
+      if ($("scoreText")) $("scoreText").textContent = `Respondé las 40 preguntas y completá los 5 ejercicios. La nota final es sobre 90 puntos. Se aprueba con el 70% (nota 7/10).`;
       if ($("gradeMessage")) $("gradeMessage").textContent = "Completá tus datos personales. Al finalizar, el servicio de IA corregirá los cinco ejercicios de código.";
     }
   }

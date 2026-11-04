@@ -9,8 +9,8 @@ ESTRUCTURA
 CALIFICACIÓN
 - Partes A y B: 40 puntos de corrección automática.
 - Parte C: 5 ejercicios, hasta 10 puntos cada uno, corregidos por IA.
-- Total: 90 puntos. Aprobación de referencia: 60%.
-- La IA entrega puntaje, observaciones, fortalezas y aspectos para mejorar.
+- Total: 90 puntos. Aprobación: 70% (equivale a nota 7/10).
+- La IA entrega puntaje, observaciones, fortalezas y aspectos para mejorar. La nota final se calcula así: (puntos A+B + puntos C) / 90 × 100. El 70% exacto equivale a 7/10 y aprueba.
 
 REQUISITO PARA LA IA Y CONTRASEÑA DOCENTE
 Este proyecto ya incluye un servidor Node.js que conecta con OpenAI. No se debe poner la API key en app.js ni en ningún archivo público.
@@ -26,10 +26,10 @@ Este proyecto ya incluye un servidor Node.js que conecta con OpenAI. No se debe 
 Para publicar en internet, desplegar esta carpeta en un servicio que ejecute Node.js y configurar allí las variables de entorno. GitHub Pages por sí solo no ejecuta server.js ni protege claves secretas.
 
 BOTÓN DOCENTE
-El botón solicita la contraseña y la valida en el servidor. Si es correcta, elimina el intento de este navegador (localStorage) y recarga la página. La acción no borra copias guardadas en otros dispositivos.
+El botón solicita la contraseña y la valida en el servidor. Si es correcta, elimina el intento de este navegador (localStorage) y recarga la página. La acción borra el intento finalizado y el borrador guardados en este navegador; no borra copias guardadas en otros dispositivos.
 
 ALMACENAMIENTO Y PRIVACIDAD
-El intento se conserva en el navegador del dispositivo. No se envía a una base de datos ni existe un panel central para que el docente consulte todos los alumnos. Para eso se debe agregar autenticación y persistencia con Firebase/Firestore o una base de datos del servidor.
+El avance parcial se guarda automáticamente como borrador en el navegador. Al finalizar, el intento queda bloqueado en ese navegador. No se envía a una base de datos ni existe un panel central para que el docente consulte todos los alumnos. Para eso se debe agregar autenticación y persistencia con Firebase/Firestore o una base de datos del servidor.
 
 RESTRICCIÓN DE PORTAPAPELES
 En los campos de código se bloquean copiar, cortar, pegar, menú contextual, arrastrar y soltar y atajos habituales. Es una barrera de interfaz, no una protección infalible.

@@ -19,7 +19,7 @@
 
   <main class="container">
     <section class="student-data panel" aria-labelledby="studentTitle">
-      <div><span class="eyebrow">IDENTIFICACIÓN</span><h2 id="studentTitle">Datos del estudiante</h2><p>Completá tus datos antes de finalizar la evaluación.</p></div>
+      <div><span class="eyebrow">IDENTIFICACIÓN</span><h2 id="studentTitle">Datos del estudiante</h2><p>Completá tus datos. El sistema guardará tu avance en este dispositivo para que puedas continuar si cerrás la página.</p></div>
       <div class="student-fields">
         <label>Nombre<input id="studentName" name="studentName" type="text" maxlength="60" autocomplete="given-name" required></label>
         <label>Apellido<input id="studentLastName" name="studentLastName" type="text" maxlength="60" autocomplete="family-name" required></label>
@@ -29,7 +29,7 @@
     <section class="intro panel">
       <div>
         <h2>Prepará tu evaluación</h2>
-        <p>Completá las 20 preguntas teóricas, las 20 de interpretación y los 5 ejercicios de corrección de código. La parte C se responde escribiendo, sin pegar código.</p>
+        <p>La evaluación tiene 45 actividades: 20 teóricas, 20 de interpretación y 5 ejercicios de corrección de código. Las partes A y B suman 40 puntos; la parte C se corrige con IA y suma hasta 50 puntos.</p>
       </div>
       <div class="progress-wrap">
         <div class="progress-label"><span>Progreso</span><strong id="progressText">0 de 45</strong></div>
@@ -74,7 +74,7 @@ console.log("Cantidad de productos:", productos.length);</code></pre>
       <div class="section-heading">
         <span class="eyebrow">PARTE C · 5 EJERCICIOS</span>
         <h2>Corrección de código</h2>
-        <p>Detectá los errores y escribí el código corregido. No se permite copiar, cortar, pegar ni arrastrar texto en los editores. Esta parte queda guardada para corrección docente y no modifica la nota automática de las 40 preguntas.</p>
+        <p>Detectá los errores y escribí el código corregido. No se permite copiar, cortar, pegar ni arrastrar texto en los editores. La IA corregirá cada ejercicio sobre 10 puntos; esta parte aporta hasta 50 puntos al resultado final.</p>
       </div>
 
       <article class="exercise panel">
@@ -144,8 +144,8 @@ try {
     </section>
 
     <section class="finish panel">
-      <div><span class="eyebrow">RESULTADO</span><h2>Tu evaluación</h2><p id="scoreText">La nota automática se calcula sobre las 40 preguntas de las partes A y B. Los 5 ejercicios de la parte C quedan para corrección docente.</p></div>
-      <div class="score" id="score">—<small> / 40</small></div>
+      <div><span class="eyebrow">RESULTADO</span><h2>Tu evaluación</h2><p id="scoreText">La calificación total es sobre 90 puntos: 40 de las preguntas A y B y 50 de los ejercicios C corregidos con IA. Se aprueba con el 70 % (nota 7/10).</p></div>
+      <div class="score" id="score">—<small> / 90</small></div>
       <div class="finish-actions">
         <button id="gradeBtn" class="primary" type="button">Finalizar y corregir</button>
         <button id="resetBtn" class="secondary" type="button" hidden>Reiniciar</button>
@@ -155,7 +155,7 @@ try {
     </section>
 
     <section class="teacher-tools panel">
-      <div><h2>Administración docente</h2><p>Elimina el intento guardado en este navegador. Requiere autorización docente.</p></div>
+      <div><h2>Administración docente</h2><p>Elimina el intento finalizado y el avance guardado en este navegador. Requiere autorización docente.</p></div>
       <button id="deleteSavedBtn" class="danger" type="button">Eliminar datos guardados del examen</button>
       <p id="deleteStatus" class="delete-status" aria-live="polite"></p>
     </section>
