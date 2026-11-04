@@ -413,7 +413,7 @@
   }
 
   function updateProgress() {
-    const answeredQuestions = Object.keys(answers).length;
+    const answeredQuestions = Math.min(totalQuestions, Object.keys(answers).filter(id => /^(t|i)-\d+$/.test(id)).length);
     const answeredExercises = Array.from(document.querySelectorAll(".code-answer"))
       .filter(field => field.value.trim().length > 0).length;
     const totalActivities = totalQuestions + 5;
@@ -579,8 +579,15 @@
         percentage: Number(((score + aiData.results.reduce((sum, item) => sum + Number(item.score || 0), 0)) / (totalQuestions + 50) * 100).toFixed(2)),
         date: new Date().toISOString(), version: 3
       };
-      localStorage.setItem(EXAM_KEY, JSON.stringify(attempt));
-      localStorage.removeItem(DRAFT_KEY);
+      try {
+        localStorage.setItem(EXAM_KEY, JSON.stringify(attempt));
+        localStorage.removeItem(DRAFT_KEY);
+      } catch (storageError) {
+        console.warn("La corrección terminó, pero no se pudo guardar el intento en este navegador:", storageError);
+        if ($("gradeMessage")) {
+          $("gradeMessage").textContent = "La corrección terminó, pero el navegador no pudo guardar el intento. Guardá o informá el resultado al docente.";
+        }
+      }
       showCorrection(attempt.answers, attempt.score, attempt.date, attempt);
     } catch (error) {
       console.error("Error al corregir con IA:", error);

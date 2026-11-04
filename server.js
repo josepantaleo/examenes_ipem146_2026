@@ -10,7 +10,6 @@ import { fileURLToPath } from "node:url";
 const app = express();
 const PORT = process.env.PORT || 3000;
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 app.use(helmet({ contentSecurityPolicy: false }));
 app.use(express.json({ limit: "80kb" }));
@@ -27,9 +26,16 @@ const exercises = [
 app.post("/api/grade-code", async (req, res) => {
   try {
     if (!process.env.OPENAI_API_KEY) return res.status(503).json({ error: "Falta configurar OPENAI_API_KEY en el servidor." });
+    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
     const { student, answers } = req.body || {};
-    if (!student?.name || !student?.lastName || !student?.course || !answers || typeof answers !== "object") {
-      return res.status(400).json({ error: "Faltan los datos del estudiante o las respuestas." });
+    const validText = value => typeof value === "string" && value.trim().length > 0;
+    if (!student || !validText(student.name) || !validText(student.lastName) ||
+        !validText(student.course) || !answers || typeof answers !== "object" ||
+        Array.isArray(answers)) {
+      return res.status(400).json({ error: "Completá nombre, apellido, curso y las respuestas." });
+    }
+    if (student.name.length > 60 || student.lastName.length > 60 || student.course.length > 30) {
+      return res.status(400).json({ error: "Los datos del estudiante superan la longitud permitida." });
     }
     const submissions = exercises.map(ex => ({
       id: ex.id,
