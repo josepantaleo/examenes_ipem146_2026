@@ -376,7 +376,7 @@
     const items = allItems();
     let points = 0;
     items.forEach((item, index) => {
-      if (savedAnswers?.[item.id] === item.c) points += index < theory.length ? 0.1 : 0.25;
+      if (savedAnswers?.[item.id] === item.c) points += index < theory.length ? 0.1 : 0.2;
     });
     return Number(points.toFixed(2));
   }
@@ -497,7 +497,7 @@
         <div class="student-count count-incorrect"><strong>${incorrect}</strong><span>Incorrectas</span></div>
         <div class="student-count count-unanswered"><strong>${unanswered}</strong><span>Sin responder</span></div>
       </div>
-      <p class="student-summary-score">Puntaje: <strong>${abPoints.toFixed(2).replace(".", ",")} / 7 puntos</strong>. Teoría: ${theoryCorrect}/20 (${(theoryCorrect * 0.1).toFixed(2).replace(".", ",")}/2). Interpretación: ${interpretationCorrect}/20 (${(interpretationCorrect * 0.25).toFixed(2).replace(".", ",")}/5). La parte C (código) queda pendiente de evaluación docente.</p>
+      <p class="student-summary-score">Puntaje: <strong>${abPoints.toFixed(2).replace(".", ",")} / 6 puntos</strong>. Teoría: ${theoryCorrect}/20 (${(theoryCorrect * 0.1).toFixed(2).replace(".", ",")}/2). Interpretación: ${interpretationCorrect}/20 (${(interpretationCorrect * 0.2).toFixed(2).replace(".", ",")}/4). La parte C (código) queda pendiente de evaluación docente.</p>
       <details class="student-summary-details" open><summary>Ver detalle de las 40 preguntas</summary><div class="student-summary-list">${rows}</div></details>`;
   }
 
@@ -593,15 +593,15 @@
         <pre class="reference-code"><code>${escapeHTML(model)}</code></pre>
         <p><strong>Código entregado por el estudiante:</strong></p>
         <pre><code>${escapeHTML(codeAnswersNow[`answer${index + 1}`] || "Sin responder")}</code></pre>
-        <label>Calificación del docente (0 a 0,60)
-          <input class="teacher-code-score" data-index="${index + 1}" type="number" min="0" max="0.6" step="0.01" value="${Number.isFinite(Number(savedCodeScores[`answer${index + 1}`])) ? Number(savedCodeScores[`answer${index + 1}`]) : 0}">
+        <label>Calificación del docente (0 a 0,80)
+          <input class="teacher-code-score" data-index="${index + 1}" type="number" min="0" max="0.8" step="0.01" value="${Number.isFinite(Number(savedCodeScores[`answer${index + 1}`])) ? Number(savedCodeScores[`answer${index + 1}`]) : 0}">
         </label>
       </article>`).join("");
-    root.innerHTML = `<h3>Evaluación docente · ${correct}/40 respuestas correctas · A y B: ${abScore.toFixed(2).replace(".", ",")}/7 puntos</h3>
+    root.innerHTML = `<h3>Evaluación docente · ${correct}/40 respuestas correctas · A y B: ${abScore.toFixed(2).replace(".", ",")}/6 puntos</h3>
       <p>Las respuestas correctas aparecen en verde y las incorrectas en rojo. En cada pregunta se muestra la respuesta elegida, la respuesta correcta y una explicación.</p>
       <details open><summary>Corrección de respuestas · Partes A y B</summary><ol class="teacher-answer-list">${keys}</ol></details>
       <h3>Parte C · Corrección de código</h3>
-      <p>Teoría: 0,10 por respuesta correcta (máximo 2 puntos). Interpretación: 0,25 por respuesta correcta (máximo 5 puntos). Asigná de 0 a 0,60 puntos a cada ejercicio de código (máximo 3 puntos). Total: 10 puntos.</p>${exercises}
+      <p>Teoría: 0,10 por respuesta correcta (máximo 2 puntos). Interpretación: 0,20 por respuesta correcta (máximo 4 puntos). Asigná de 0 a 0,80 puntos a cada ejercicio de código (máximo 4 puntos). Total: 10 puntos.</p>${exercises}
       <button id="saveTeacherGrade" class="primary" type="button">Guardar calificación docente</button>
       <p id="teacherGradeStatus" aria-live="polite"></p>`;
     $("saveTeacherGrade")?.addEventListener("click", () => {
@@ -609,11 +609,11 @@
       let valid = true;
       root.querySelectorAll(".teacher-code-score").forEach(input => {
         const value = Number(input.value);
-        if (!Number.isFinite(value) || value < 0 || value > 0.6) valid = false;
+        if (!Number.isFinite(value) || value < 0 || value > 0.8) valid = false;
         scores[`answer${input.dataset.index}`] = value;
       });
       if (!valid) {
-        $("teacherGradeStatus").textContent = "Ingresá un puntaje entre 0 y 0,60 en cada ejercicio.";
+        $("teacherGradeStatus").textContent = "Ingresá un puntaje entre 0 y 0,80 en cada ejercicio.";
         return;
       }
       const codeScore = Object.values(scores).reduce((sum, value) => sum + value, 0);
@@ -629,7 +629,7 @@
         return;
       }
       if ($("score")) $("score").innerHTML = `${total.toLocaleString("es-AR", { maximumFractionDigits: 2 })}<small> / 10</small>`;
-      if ($("scoreText")) $("scoreText").textContent = `Nota docente: ${gradeOutOfTen.toFixed(2).replace(".", ",")}/10 · ${percent.toFixed(0)}% · Teoría e interpretación: ${abScore.toFixed(2).replace(".", ",")}/7 (${correct}/40 correctas) · Código: ${codeScore.toFixed(2).replace(".", ",")}/3.`;
+      if ($("scoreText")) $("scoreText").textContent = `Nota docente: ${gradeOutOfTen.toFixed(2).replace(".", ",")}/10 · ${percent.toFixed(0)}% · Teoría e interpretación: ${abScore.toFixed(2).replace(".", ",")}/6 (${correct}/40 correctas) · Código: ${codeScore.toFixed(2).replace(".", ",")}/4.`;
       if ($("gradeMessage")) {
         $("gradeMessage").textContent = percent >= PASS_PERCENT ? "Evaluación aprobada según el criterio del 70% (7/10)." : "Evaluación no aprobada. El mínimo es 70% (7/10).";
         $("gradeMessage").className = `grade-message ${percent >= PASS_PERCENT ? "pass" : "fail"}`;
@@ -710,7 +710,7 @@
     const codeAnswersNow = Object.fromEntries(Array.from(document.querySelectorAll(".code-answer"), field => [field.id, field.value]));
     const attempt = {
       student, answers: { ...answers }, codeAnswers: codeAnswersNow,
-      date: new Date().toISOString(), version: 6, teacherCodeScores: {}
+      date: new Date().toISOString(), version: 7, teacherCodeScores: {}
     };
     try {
       localStorage.setItem(EXAM_KEY, JSON.stringify(attempt));
@@ -775,7 +775,7 @@
 
       if ($("score")) $("score").innerHTML = `—<small> / 10</small>`;
       if ($("scoreText")) $("scoreText").textContent =
-        "Respondé las 40 preguntas y completá los 5 ejercicios. La nota es sobre 10 puntos: teoría 2, interpretación 5 y código 3. Se aprueba con 7/10 (70%).";
+        "Respondé las 40 preguntas y completá los 5 ejercicios. La nota es sobre 10 puntos: teoría 2, interpretación 4 y código 4. Se aprueba con 7/10 (70%).";
       if ($("gradeMessage")) {
         $("gradeMessage").textContent = "Nuevo intento habilitado. Ingresá nuevamente tus datos y comenzá la evaluación.";
         $("gradeMessage").className = "grade-message";
@@ -868,7 +868,7 @@
       }
       // Si el intento proviene de la escala anterior (90 puntos), se conserva
       // la entrega, pero se elimina la nota vieja para recalcularla sobre 10.
-      if (Number(attempt.version || 0) < 6) {
+      if (Number(attempt.version || 0) < 7) {
         delete attempt.teacherScore;
         delete attempt.teacherGradeOutOfTen;
         delete attempt.teacherGradedAt;
@@ -960,7 +960,7 @@
       restoreDraft();
       examLocked = false;
       if ($("score")) $("score").innerHTML = `—<small> / 10</small>`;
-      if ($("scoreText")) $("scoreText").textContent = `Respondé las 40 preguntas y completá los 5 ejercicios. La nota es sobre 10 puntos: teoría 2, interpretación 5 y código 3. Se aprueba con 7/10 (70%).`;
+      if ($("scoreText")) $("scoreText").textContent = `Respondé las 40 preguntas y completá los 5 ejercicios. La nota es sobre 10 puntos: teoría 2, interpretación 4 y código 4. Se aprueba con 7/10 (70%).`;
       if ($("gradeMessage")) $("gradeMessage").textContent = "Completá tus datos personales. Al entregar, el docente podrá consultar la clave y evaluar tus respuestas.";
     }
   }

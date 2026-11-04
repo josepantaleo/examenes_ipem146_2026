@@ -1,0 +1,16 @@
+COLOQUIO MODELO DE JAVASCRIPT - IPEM 146
+
+Archivos:
+- index.html
+- styles.css
+- app.js
+
+Subir los tres archivos a la misma carpeta del sitio (por ejemplo, GitHub Pages).
+
+Puntaje:
+- Teoría: 20 x 0,10 = 2 puntos.
+- Interpretación: 20 x 0,20 = 4 puntos.
+- Código: 5 x 0,80 = 4 puntos.
+- Total: 10 puntos. Aprobación: 7/10 (70%).
+
+La contraseña de acceso docente y eliminación de intento se valida en JavaScript del navegador. El campo la muestra enmascarada, pero no constituye seguridad real: para protegerla de estudiantes con conocimientos técnicos debe validarse en un servidor o mediante autenticación y reglas seguras.
