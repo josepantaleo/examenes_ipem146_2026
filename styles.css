@@ -96,3 +96,7 @@ footer{text-align:center;color:#8490a3;font-size:.8rem;padding:28px 8px}
 @media print{.hero,.student-data,.intro,.tabs,.section,.finish-actions,.teacher-tools,.dashboard-actions,.dashboard-filters,.password-dialog{display:none!important}.teacher-dashboard{border:0;box-shadow:none;margin:0;padding:0}.results-table{font-size:10px}}
 .teacher-tool-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:12px}.teacher-tool-actions button{margin:0}
 .report-actions{display:flex;gap:9px;flex-wrap:wrap}.report-actions button{margin:0}
+
+/* Filtros ampliados del panel docente */
+.dashboard-filters select{width:100%;min-height:41px;border:1px solid #d5deea;border-radius:9px;padding:10px 12px;background:#fff;color:var(--ink);font:inherit}
+.dashboard-filters input:focus,.dashboard-filters select:focus{outline:3px solid #2563eb20;border-color:var(--blue)}
