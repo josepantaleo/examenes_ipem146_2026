@@ -1,37 +1,187 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sitio en construcción | IPEM 146</title>
+  <meta name="description" content="Coloquio modelo interactivo de JavaScript - IPEM 146">
+  <title>Coloquio Modelo | IPEM 146</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+  <header class="hero">
+    <div class="brand">I.P.E.M. Nº 146 · Formación Profesional</div>
+    <h1>Coloquio modelo de JavaScript</h1>
+    <div class="aviso-examen">
+  <h2>⚠️ NO ES EL COLOQUIO O EXAMEN REAL</h2>
+  <p>SINO UN MODELO DE EVALUACIÓN PARA PRACTICAR</p>
+</div>
+  </header>
 
-  <main class="contenedor">
-    <div class="icono">🚧</div>
+  <main class="container">
+    <section class="student-data panel" aria-labelledby="studentTitle">
+      <div><span class="eyebrow">IDENTIFICACIÓN</span><h2 id="studentTitle">Datos del estudiante</h2><p>Completá tus datos. El sistema guardará tu avance en este dispositivo para que puedas continuar si cerrás la página.</p></div>
+      <div class="student-fields">
+        <label>Nombre<input id="studentName" name="studentName" type="text" maxlength="60" autocomplete="given-name" required></label>
+        <label>Apellido<input id="studentLastName" name="studentLastName" type="text" maxlength="60" autocomplete="family-name" required></label>
+        <label>Curso<input id="studentCourse" name="studentCourse" type="text" maxlength="30" placeholder="Ej.: 5° A - Informática" required></label>
+      </div>
+    </section>
+    <section class="intro panel">
+      <div>
+        <h2>Prepará tu evaluación</h2>
+        <p>La evaluación tiene 45 actividades: 20 teóricas, 20 de interpretación y 5 ejercicios de corrección de código. Las preguntas y sus opciones se presentan en orden aleatorio para cada nuevo intento; el orden se conserva si se cierra y vuelve a abrir la página. La parte A suma 2 puntos (0,10 por respuesta), la parte B suma 4 puntos (0,20 por respuesta) y la parte C suma 4 puntos (0,80 por ejercicio de código). Total: 10 puntos. Se aprueba con 7/10 (70%).</p>
+      </div>
+      <div class="progress-wrap">
+        <div class="progress-label"><span>Progreso</span><strong id="progressText">0 de 45</strong></div>
+        <div class="progress"><div id="progressBar"></div></div>
+      </div>
+    </section>
 
-    <p class="etiqueta">PRÓXIMAMENTE</p>
+    <nav class="tabs" aria-label="Partes del coloquio">
+      <button class="tab active" data-target="teoria">A · Teórico</button>
+      <button class="tab" data-target="interpretacion">B · Interpretación</button>
+      <button class="tab" data-target="errores">C · Corrección de código</button>
+    </nav>
 
-    <h1>SITIO WEB EN CONSTRUCCIÓN</h1>
+    <section id="teoria" class="section active">
+      <div class="section-heading"><span class="eyebrow">PARTE A · 20 PREGUNTAS</span><h2>Conocimientos teóricos</h2><p>Seleccioná una sola respuesta por pregunta.</p></div>
+      <div id="theoryQuestions"></div>
+    </section>
 
-    <h2>IPEM 146 CENTENARIO</h2>
+    <section id="interpretacion" class="section">
+      <div class="section-heading"><span class="eyebrow">PARTE B · 20 PREGUNTAS</span><h2>Interpretación de código</h2><p>Analizá cada fragmento y elegí la respuesta correcta.</p></div>
+      <div class="code-card">
+        <div class="code-title">Programa de productos</div>
+        <pre><code>const productos = [
+  { nombre: "Cuaderno", precio: 2500, stock: 4 },
+  { nombre: "Lapicera", precio: 800, stock: 0 },
+  { nombre: "Mochila", precio: 18000, stock: 2 },
+  { nombre: "Regla", precio: 1200, stock: 5 }
+];
 
-    <p class="descripcion">
-      Estamos trabajando para ofrecerte
-      una nueva experiencia digital.
-    </p>
+const disponibles = productos.filter(producto => producto.stock > 0);
+const nombres = disponibles.map(producto => producto.nombre);
+const productoBuscado = productos.find(producto => producto.nombre === "Mochila");
 
-    <div class="estado">
-      <span class="punto"></span>
-      Estamos trabajando en mejoras
+console.log("Disponibles:", nombres);
+console.log("Producto buscado:", productoBuscado);
+console.log("Cantidad de productos:", productos.length);</code></pre>
+      </div>
+      <div id="interpretQuestions"></div>
+    </section>
+
+    <section id="errores" class="section">
+      <div class="section-heading">
+        <span class="eyebrow">PARTE C · 5 EJERCICIOS</span>
+        <h2>Corrección de código</h2>
+        <p>Detectá los errores y escribí el código corregido. No se permite copiar, cortar, pegar ni arrastrar texto en los editores. El docente revisará cada ejercicio y asignará hasta 0,80 puntos; esta parte aporta hasta 4 puntos. La evaluación completa suma 10 puntos.</p>
+      </div>
+
+      <article class="exercise panel">
+        <h3>Ejercicio 1 · Variables, conversión y operadores</h3>
+        <p class="muted">El programa debe calcular el total de 3 productos de $1500 y comprobar si el total es $4500. Corregí los errores.</p>
+        <pre><code>const precio = "1500";
+const cantidad = 3;
+const total = precio + cantidad;
+
+if (total = 4500) {
+  console.log("Total correcto");
+}</code></pre>
+        <textarea id="answer1" class="code-answer" rows="7" spellcheck="false" autocomplete="off" autocapitalize="off" placeholder="Escribí aquí el código corregido..."></textarea>
+      </article>
+
+      <article class="exercise panel">
+        <h3>Ejercicio 2 · Funciones y parámetros</h3>
+        <p class="muted">La función debe aplicar un descuento del 20% a un precio de $10000. Corregí el cálculo.</p>
+        <pre><code>function calcularDescuento(precio, porcentaje) {
+  const descuento = precio * porcentaje;
+  return precio - descuento;
+}
+
+console.log(calcularDescuento(10000, 20));</code></pre>
+        <textarea id="answer2" class="code-answer" rows="7" spellcheck="false" autocomplete="off" autocapitalize="off" placeholder="Escribí aquí la función corregida..."></textarea>
+      </article>
+
+      <article class="exercise panel">
+        <h3>Ejercicio 3 · Arrays y recorridos</h3>
+        <p class="muted">El objetivo es recorrer las notas y mostrar solamente las que son iguales o mayores que 6. Corregí el código.</p>
+        <pre><code>const notas = [4, 8, 6, 3, 10];
+
+for (let i = 0; i <= notas.length; i++) {
+  if (notas[i] > 6) {
+    console.log(notas);
+  }
+}</code></pre>
+        <textarea id="answer3" class="code-answer" rows="7" spellcheck="false" autocomplete="off" autocapitalize="off" placeholder="Escribí aquí el código corregido..."></textarea>
+      </article>
+
+      <article class="exercise panel">
+        <h3>Ejercicio 4 · Objetos y propiedades</h3>
+        <p class="muted">El programa debe mostrar el nombre y la nota del alumno. Corregí los errores.</p>
+        <pre><code>const alumno = {
+  nombre: "Lucía",
+  nota: 9
+};
+
+console.log(alumno.nombre);
+console.log(alumno.notas);</code></pre>
+        <textarea id="answer4" class="code-answer" rows="7" spellcheck="false" autocomplete="off" autocapitalize="off" placeholder="Escribí aquí el código corregido..."></textarea>
+      </article>
+
+      <article class="exercise panel">
+        <h3>Ejercicio 5 · JSON y manejo de errores</h3>
+        <p class="muted">La respuesta recibida contiene un JSON válido. Convertí el texto en objeto y mostrá la temperatura. Corregí el código.</p>
+        <pre><code>const respuesta = '{"ubicacion":"IPEM 146","temperatura":21}';
+
+try {
+  const datos = JSON.stringify(respuesta);
+  console.log(datos.temperatura);
+} catch (error) {
+  console.log(error.menssage);
+}</code></pre>
+        <textarea id="answer5" class="code-answer" rows="7" spellcheck="false" autocomplete="off" autocapitalize="off" placeholder="Escribí aquí el código corregido..."></textarea>
+      </article>
+    </section>
+
+    <div class="finalize-exam panel">
+      <div>
+        <h2>¿Terminaste de responder?</h2>
+        <p>Cuando estés listo, finalizá la evaluación para corregir las respuestas y ver tu resultado.</p>
+      </div>
+      <button id="gradeBtn" class="primary finalize-button" type="button">Finalizar y corregir</button>
     </div>
 
-    <p class="pie">
-      Gracias por tu paciencia.
-    </p>
-  </main>
+    <section class="finish panel">
+      <div><span class="eyebrow">RESULTADO</span><h2>Tu evaluación</h2><p id="scoreText">La evaluación suma 10 puntos: teoría 2, interpretación 4 y código 4. Se aprueba con 7/10 (70%).</p></div>
+      <div class="score" id="score">—<small> / 10</small></div>
+      <div class="finish-actions">
+        <button id="resetBtn" class="secondary" type="button" hidden>Reiniciar</button>
+        <button id="teacherReviewBtn" class="secondary" type="button" hidden>Abrir evaluación docente</button>
+      </div>
+      <p id="gradeMessage" class="grade-message" aria-live="polite"></p>
+      <div id="studentSummary" class="student-summary" aria-live="polite"></div>
+      <div id="teacherReview" class="ai-feedback" aria-live="polite"></div>
+    </section>
 
+    <section class="teacher-tools panel">
+      <div><h2>Administración docente</h2><p>Elimina el intento y el borrador activos de este navegador para habilitar una nueva evaluación. El historial docente se conserva. Los datos no se sincronizan entre dispositivos. La contraseña es una barrera de interfaz; para seguridad real se necesita validación en un servidor.</p></div>
+      <div class="teacher-tool-actions"><button id="teacherDashboardBtn" class="secondary" type="button">Abrir panel de resultados</button><button id="deleteSavedBtn" class="danger" type="button">Eliminar intento activo y habilitar nuevo</button></div>
+      <p id="deleteStatus" class="delete-status" aria-live="polite"></p>
+    </section>
+
+    <footer>Material de evaluación modelo · Formación Profesional en Diseño Web · IPEM 146</footer>
+  </main>
+  <dialog id="teacherPasswordDialog" class="password-dialog" aria-labelledby="teacherPasswordTitle">
+    <form id="teacherPasswordForm" method="dialog">
+      <h2 id="teacherPasswordTitle">Acceso docente</h2>
+      <label for="teacherPasswordInput">Contraseña</label>
+      <input id="teacherPasswordInput" type="password" autocomplete="current-password" required>
+      <div class="password-actions">
+        <button type="button" class="secondary" onclick="document.getElementById('teacherPasswordDialog').close()">Cancelar</button>
+        <button type="submit" class="primary">Aceptar</button>
+      </div>
+    </form>
+  </dialog>
+  <script src="app.js"></script>
 </body>
 </html>
